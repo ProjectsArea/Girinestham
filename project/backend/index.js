@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
-import csurf from "csurf";
 import { APP_CONFIG, SECURITY_CONSTANTS, ERROR_MESSAGES, HTTP_STATUS } from "./constants/index.js";
 import { logApplicationEvent } from "./utils/logger.js";
 
@@ -79,17 +78,6 @@ app.use((req, res, next) => {
    next();
 });
 
-/* ================= CSRF ================= */
-const csrfProtection = csurf({
-   cookie: {
-      httpOnly: true,
-      secure: false, // Set to false for localhost
-      sameSite: 'lax', // Use lax for localhost
-      key: '_csrf'
-   }
-});
-app.use(csrfProtection);
-
 /* ================= PUBLIC ROUTES ================= */
 import homeRoutes from "./routes/public/homeRoutes.js";
 import aboutRoutes from "./routes/public/aboutRoutes.js";
@@ -111,25 +99,6 @@ app.use(APP_CONFIG.API_ROUTES.ADMIN, adminRoutes);
 app.use((err, req, res, next) => {
 
    const responseTime = 0;
-
-   if (err.code === "EBADCSRFTOKEN") {
-
-      logApplicationEvent({
-         logLevel: "WARNING",
-         logType: "security",
-         method: req.method,
-         endpoint: req.originalUrl,
-         statusCode: HTTP_STATUS.FORBIDDEN,
-         message: "Invalid CSRF token",
-         stackTrace: err.stack,
-         responseTime,
-         req,
-      });
-
-      return res.status(HTTP_STATUS.FORBIDDEN).json({
-         message: ERROR_MESSAGES.INVALID_CSRF_TOKEN
-      });
-   }
 
    logApplicationEvent({
       logLevel: "ERROR",

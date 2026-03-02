@@ -3,61 +3,22 @@ import config from "../../config/config.js";
 
 const API_BASE_URL = config.BASE_URL;
 
-// Function to get CSRF token from API
-export const getCSRFToken = async () => {
-  try {
-    const response = await api.get("/admin/csrf");
-    return response.data.csrfToken;
-  } catch (error) {
-    console.error("Failed to get CSRF token:", error);
-    return null;
-  }
-};
-
-// Function to get CSRF token from cookies (fallback)
-const getCSRFTokenFromCookies = () => {
-  const cookies = document.cookie.split(';');
-  for (let cookie of cookies) {
-    const [name, value] = cookie.trim().split('=');
-    if (name === '_csrf') {
-      return decodeURIComponent(value);
-    }
-  }
-  return null;
-};
-
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // Required for CSRF cookies
+  withCredentials: true, // Required for cookies
 });
 
-// Add request interceptor to include auth token and CSRF token
+// Add request interceptor to include auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("adminToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // Add CSRF token for state-changing requests
-    let csrfToken = getCSRFTokenFromCookies();
-    if (!csrfToken && ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
-      // Try to get from API if not in cookies
-      getCSRFToken().then(token => {
-        if (token) {
-          config.headers['X-CSRF-Token'] = token;
-        }
-      });
-    }
-    
-    if (csrfToken && ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase())) {
-      config.headers['X-CSRF-Token'] = csrfToken;
-    }
-    
     return config;
   },
   (error) => {
@@ -81,19 +42,9 @@ api.interceptors.response.use(
 
 export const adminLogin = async (credentials) => {
   try {
-    // First get CSRF token
-    const csrfToken = await getCSRFToken();
-    
-    const response = await api.post("/admin/login", credentials, {
-      headers: {
-        'X-CSRF-Token': csrfToken
-      }
-    });
-    
-    console.log("Login response:", response.data);
+    const response = await api.post("/admin/login", credentials);
     return response.data;
   } catch (error) {
-    console.error("Login error:", error.response?.data);
     throw new Error(error.response?.data?.message || "Login failed");
   }
 };

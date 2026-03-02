@@ -9,11 +9,6 @@ import userRoutes from './userRoutes.js';
 
 const router = express.Router();
 
-// Get CSRF token
-router.get('/csrf', (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
-});
-
 // Authentication routes
 router.post('/login', login);
 router.get('/verify', authenticateAdmin, verifyToken);
