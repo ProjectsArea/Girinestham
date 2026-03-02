@@ -148,4 +148,15 @@ const PORT = process.env.PORT || APP_CONFIG.DEFAULT_PORT;
 
 app.listen(PORT, () => {
    console.log(`🚀 Server running on port ${PORT}`);
+import express from 'express';
+
+const app = express();
+const PORT = 5000;
+
+app.get("/", (req, res) => {
+  res.send("Welcome to backend");
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
