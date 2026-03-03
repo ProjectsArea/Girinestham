@@ -1,0 +1,8 @@
+CREATE TABLE mst_payment_sub_types (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sub_type_name VARCHAR(50) NOT NULL UNIQUE,
+    payment_mode_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (payment_mode_id) REFERENCES mst_payment_modes(id)
+);

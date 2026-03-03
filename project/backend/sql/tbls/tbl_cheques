@@ -1,0 +1,38 @@
+CREATE TABLE tbl_cheques (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    cheque_type_id INT NOT NULL,   -- Issued / Collected
+
+    cheque_no VARCHAR(50) NOT NULL,
+
+    cheque_date DATE NOT NULL,
+
+    bank_id INT NOT NULL,
+
+    payee_name VARCHAR(150),      -- For issued
+    received_from VARCHAR(150),   -- For collected
+
+    purpose VARCHAR(200),
+
+    amount DECIMAL(12,2) NOT NULL,
+
+    voucher_no VARCHAR(50),
+
+    issued_or_received_by INT,    -- user_id
+
+    cheque_status_id INT,
+
+    clearance_date DATE,
+
+    linked_payment_id INT,  -- if connected to tbl_payments
+
+    remarks TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (cheque_type_id) REFERENCES mst_cheque_types(id),
+    FOREIGN KEY (bank_id) REFERENCES mst_banks(id),
+    FOREIGN KEY (issued_or_received_by) REFERENCES tbl_users(id),
+    FOREIGN KEY (cheque_status_id) REFERENCES mst_cheque_statuses(id),
+    FOREIGN KEY (linked_payment_id) REFERENCES tbl_payments(id)
+);

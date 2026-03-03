@@ -1,0 +1,26 @@
+CREATE TABLE tbl_payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    receipt_no VARCHAR(100) UNIQUE,
+    payment_date DATE,
+    payment_time TIME,
+    payment_mode_id INT,
+    payment_sub_type_id INT,
+    transaction_id VARCHAR(150),
+    payment_status_id INT,
+    collected_by_id INT,
+    proof VARCHAR(255),
+    amount DECIMAL(12,2),
+    purpose_id INT,
+    reference_id INT, 
+    payment_decision_id INT,
+    remarks TEXT,
+    decision_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (payment_mode_id) REFERENCES mst_payment_modes(id),
+    FOREIGN KEY (payment_sub_type_id) REFERENCES mst_payment_sub_types(id),
+    FOREIGN KEY (payment_status_id) REFERENCES mst_payment_statuses(id),
+    FOREIGN KEY (collected_by_id) REFERENCES mst_collected_by_types(id),
+    FOREIGN KEY (purpose_id) REFERENCES mst_payment_purposes(id),
+    FOREIGN KEY (payment_decision_id) REFERENCES mst_payment_decisions(id)
+);

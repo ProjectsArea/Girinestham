@@ -1,0 +1,5 @@
+CREATE TABLE mst_tournament_updates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    update_name VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

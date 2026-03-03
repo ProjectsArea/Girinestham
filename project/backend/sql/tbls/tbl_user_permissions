@@ -1,0 +1,13 @@
+CREATE TABLE tbl_user_permissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    module_id INT,
+    module_status_id INT,
+    visibility_type_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES tbl_users(id) ON DELETE CASCADE,
+    FOREIGN KEY (module_id) REFERENCES mst_modules(id),
+    FOREIGN KEY (module_status_id) REFERENCES mst_module_statuses(id),
+    FOREIGN KEY (visibility_type_id) REFERENCES mst_module_visibility_types(id)
+);

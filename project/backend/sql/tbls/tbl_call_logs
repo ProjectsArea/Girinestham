@@ -1,0 +1,32 @@
+CREATE TABLE tbl_call_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    call_date DATE NOT NULL,
+    call_time TIME NOT NULL,
+
+    caller_name VARCHAR(150),
+    contact_number VARCHAR(20),
+
+    call_type_id INT NOT NULL,
+
+    purpose_id INT,
+
+    handled_by INT,  -- user_id
+
+    call_duration INT,  -- duration in seconds
+
+    action_taken TEXT,
+
+    follow_up_date DATE,
+
+    status_id INT,
+
+    remarks TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (call_type_id) REFERENCES mst_call_types(id),
+    FOREIGN KEY (purpose_id) REFERENCES mst_call_purposes(id),
+    FOREIGN KEY (handled_by) REFERENCES tbl_users(id),
+    FOREIGN KEY (status_id) REFERENCES mst_call_statuses(id)
+);

@@ -1,0 +1,6 @@
+CREATE TABLE mst_tournament_result_types (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    result_name VARCHAR(50) NOT NULL UNIQUE,
+    rank_order INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
