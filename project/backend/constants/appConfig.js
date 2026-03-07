@@ -6,9 +6,6 @@ export const APP_CONFIG = {
   CORS_ORIGINS: ["http://localhost:3000"],
   CORS_CREDENTIALS: true,
   
-  // Trust proxy for nginx
-  TRUST_PROXY: 1,
-  
   // API routes
   API_ROUTES: {
     HOME: '/api/home',
@@ -16,12 +13,8 @@ export const APP_CONFIG = {
     TOURNAMENTS: '/api/tournaments',
     CONTACT: '/api/contact',
     DONATE: '/api/donate',
+    ADMIN_AUTH: '/api/admin/auth',
     ADMIN: '/api/admin'
   },
   
-  // Admin roles
-  ADMIN_ROLES: {
-    ADMIN: 'admin',
-    SUPER_ADMIN: 'super_admin'
-  }
 };

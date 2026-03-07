@@ -8,14 +8,33 @@ export const findAdminByEmail = (email) => {
 
     db.query(query, [email], (err, results) => {
       if (err) {
-        console.error("Database error in findAdminByEmail:", err);
         return reject(err);
       }
-      console.log("Admin found:", results[0] ? "Yes" : "No");
       resolve(results[0] || null);
     });
   });
 };
+
+
+export const findRole = (roleName) => {
+  return new Promise((resolve, reject) => {
+    const query = "SELECT * FROM roles WHERE role_name = ? AND is_active = TRUE";
+
+    db.query(query, [roleName], (err, results) => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (results.length > 0) {
+        resolve({ exists: true, role: results[0] });
+      } else {
+        resolve({ exists: false });
+      }
+    });
+  });
+};
+
+
 
 /* ================= UPDATE LOGIN ATTEMPTS ================= */
 export const updateLoginAttempts = (adminId, attempts) => {
