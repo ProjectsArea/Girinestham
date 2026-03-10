@@ -106,8 +106,10 @@ app.use(APP_CONFIG.API_ROUTES.DONATE, donateRoutes);
 /* ----------------- ADMIN ROUTES ----------------- */
 import adminAuthRoutes from "./routes/admin/authRoutes.js";
 import adminRoutes from "./routes/admin/adminRoutes.js";
+import adminTournamentRoutes from "./routes/admin/adminTournamentRoutes.js";
 app.use(APP_CONFIG.API_ROUTES.ADMIN_AUTH, adminAuthRoutes);
 app.use(APP_CONFIG.API_ROUTES.ADMIN, adminRoutes);
+app.use(APP_CONFIG.API_ROUTES.ADMIN+"/tournaments",adminTournamentRoutes);
 
 /* ----------------- SERVER START ----------------- */
 const PORT = process.env.PORT || APP_CONFIG.DEFAULT_PORT;
