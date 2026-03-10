@@ -29,7 +29,6 @@ app.use(cors({ //cors
    origin: APP_CONFIG.CORS_ORIGINS,
    credentials: APP_CONFIG.CORS_CREDENTIALS
 }));
-
 /* ------------------ RATE LIMIT ------------------ */
 const limiter = rateLimit({
    windowMs: SECURITY_CONSTANTS.RATE_LIMIT_WINDOW_MS,
@@ -82,8 +81,6 @@ app.get("/api/csrf-token", (req, res) => {
    res.json({ csrfToken: req.csrfToken() });
 });
 
-
-
 /* ========================================= ROUTES ========================================== */
 
 app.get("/", (req, res) => {
@@ -109,10 +106,13 @@ import adminRoutes from "./routes/admin/adminRoutes.js";
 app.use(APP_CONFIG.API_ROUTES.ADMIN_AUTH, adminAuthRoutes);
 app.use(APP_CONFIG.API_ROUTES.ADMIN, adminRoutes);
 
+/* ----------------- VOLUNTEER ROUTES ----------------- */
+import studentRoutes from "./routes/volunteer/studentRoutes.js";
+app.use(APP_CONFIG.API_ROUTES.STUDENTS, studentRoutes);
+
 /* ----------------- SERVER START ----------------- */
 const PORT = process.env.PORT || APP_CONFIG.DEFAULT_PORT;
 
 app.listen(PORT, () => {
    console.log(`🚀 HTTP Server running on port http://localhost:${PORT}/`);
 });
-
