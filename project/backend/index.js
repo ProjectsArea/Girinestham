@@ -8,8 +8,6 @@ import csrf from "csurf";
 import { APP_CONFIG } from "./constants/appConfig.js";
 import { SECURITY_CONSTANTS } from "./constants/security.js";
 import { ERROR_MESSAGES, HTTP_STATUS } from "./constants/httpStatus.js";
-import fs from "fs";
-import https from "https";
 import { logApplicationEvent } from "./utils/logger.js";
 
 dotenv.config();
@@ -21,7 +19,10 @@ app.use(cookieParser());
 
 /* ========================================= SECURITY HEADERS ========================================== */
 /* ------------------ HELMET ------------------ */
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
 
 /* ------------------ CORS ------------------ */
 app.use(cors({ //cors
@@ -55,7 +56,10 @@ app.use(limiter);
 
 /* ------------------ CSRF PROTECTION ------------------ */
 const csrfProtection = csrf({
-   cookie: true,
+   cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+   },
    handler: (req, res) => {
       logApplicationEvent({
          logLevel: "WARNING",
@@ -107,15 +111,6 @@ app.use(APP_CONFIG.API_ROUTES.ADMIN, adminRoutes);
 
 /* ----------------- SERVER START ----------------- */
 const PORT = process.env.PORT || APP_CONFIG.DEFAULT_PORT;
-
-const sslOptions = {
-   key: fs.readFileSync("./ssl/key.pem"),
-   cert: fs.readFileSync("./ssl/cert.pem")
-};
-
-// https.createServer(sslOptions, app).listen(PORT, () => {
-//    console.log(`🚀 HTTPS Server running on port https://localhost:${PORT}/`);
-// });
 
 app.listen(PORT, () => {
    console.log(`🚀 HTTP Server running on port http://localhost:${PORT}/`);

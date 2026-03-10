@@ -1,13 +1,262 @@
+/* ============================================
+   Giri Nestham — Global Design System
+   Calm, professional, Gen Z–inspired light mode
+   ============================================ */
+
+:root {
+  /* Typography — Plus Jakarta Sans */
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Light, calm palette — slightly darker section backgrounds */
+  --bg-page: #F0EFED;
+  --bg-card: #FFFFFF;
+  --bg-soft: #E5E4E1;
+  --bg-subtle: #D8D6D3;
+
+  --text-primary: #1C1917;
+  --text-secondary: #57534E;
+  --text-muted: #A8A29E;
+
+  --accent: #0D9488;
+  --accent-hover: #0F766E;
+  --accent-soft: #CCFBF1;
+  --accent-muted: #5EEAD4;
+
+  --border: #E7E5E4;
+  --border-soft: #F5F5F4;
+
+  --shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.04);
+  --shadow-md: 0 4px 12px rgba(28, 25, 23, 0.06);
+  --shadow-lg: 0 12px 40px rgba(28, 25, 23, 0.08);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --transition-fast: 0.2s var(--ease-out);
+  --transition-base: 0.3s var(--ease-out);
+  --transition-slow: 0.5s var(--ease-out);
+
+  /* Button text — high contrast */
+  --btn-text: #ffffff;
+  --btn-text-weight: 600;
+
+  /* Section gradient variants — light overlay so hero image is slightly visible */
+  --gradient-hero: linear-gradient(180deg, rgba(250, 250, 249, 0.021) 0%, rgba(250, 250, 249, 0.219) 45%, rgba(250, 250, 249, 0.925) 100%);
+  --gradient-hero-blend: linear-gradient(135deg, rgba(13, 148, 136, 0.05) 0%, transparent 50%);
+  --gradient-image-overlay: linear-gradient(180deg, transparent 0%, rgba(28,25,23,0.15) 60%, rgba(28,25,23,0.4) 100%);
+  --gradient-section-a: linear-gradient(180deg, #e8faf8 0%, #f0fdfa 25%, #fafaf9 100%);
+  --gradient-section-b: linear-gradient(180deg, #fafaf9 0%, #f2f5f4 30%, #f5f5f4 100%);
+  --gradient-section-c: linear-gradient(180deg, #f5f5f4 0%, #eef2f1 25%, #fafaf9 100%);
+  --gradient-card: linear-gradient(145deg, #ffffff 0%, #f4fcfa 50%, #f8fffe 100%);
+  --gradient-card-accent: linear-gradient(135deg, rgba(13, 148, 136, 0.12) 0%, rgba(94, 234, 212, 0.05) 100%);
+  --gradient-card-border: linear-gradient(135deg, rgba(13, 148, 136, 0.35), rgba(94, 234, 212, 0.2), rgba(13, 148, 136, 0.15));
+}
+
+/* Section dividers — clearly visible */
+.section-divider {
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, var(--accent-muted) 20%, var(--accent) 50%, var(--accent-muted) 80%, transparent 100%);
+  opacity: 0.6;
+  margin: 0;
+  border: none;
+}
+
+.section-divider-soft {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border) 15%, var(--bg-subtle) 50%, var(--border) 85%, transparent);
+  margin: 0;
+  border: none;
+}
+
+/* Card logos — 3D gradient icons (unique, relevant per card) */
+.card-logo {
+  display: block;
+  flex-shrink: 0;
+}
+
+.card-logo-3d {
+  color: var(--accent);
+  opacity: 1;
+}
+
+/* Geometric symbols (legacy, being replaced by card-logo) */
+.card-symbol {
+  display: block;
+  flex-shrink: 0;
+}
+
+.card-symbol--circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--accent-soft), var(--accent-muted));
+  opacity: 0.9;
+}
+
+.card-symbol--diamond {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent-muted));
+  transform: rotate(45deg);
+  margin: 8px 0;
+}
+
+.card-symbol--triangle {
+  width: 0;
+  height: 0;
+  border-left: 18px solid transparent;
+  border-right: 18px solid transparent;
+  border-bottom: 28px solid var(--accent-muted);
+  opacity: 0.85;
+  margin: 6px 0;
+}
+
+.card-symbol--hexagon {
+  width: 28px;
+  height: 16px;
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent));
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  margin: 10px 0;
+}
+
+/* Geometric decorations for sections */
+.section-geom::before,
+.section-geom::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.06;
+}
+
+.section-geom::before {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  top: 2rem;
+  right: 5%;
+}
+
+.section-geom::after {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, var(--accent-muted), transparent);
+  transform: rotate(25deg);
+  bottom: 2rem;
+  left: 5%;
+  border-radius: 8px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-page);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* Shared layout */
+.container {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.container-wide {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Shared loading state */
+.loading-container {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Page enter animation — opacity only so fixed navbar stays viewport-fixed */
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.page-enter {
+  animation: pageFadeIn 0.5s var(--ease-out) forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card reveal animation — scale + fade */
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.card-reveal {
+  animation: cardReveal 0.6s var(--ease-out) backwards;
+}
+
+/* Center-aligned card grids */
+.card-grid-center {
+  display: grid;
+  place-items: start center;
+  justify-items: center;
+}
+
+.card-grid-center > * {
+  width: 100%;
+  max-width: 100%;
 }

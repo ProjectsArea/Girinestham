@@ -32,7 +32,7 @@ export const ERROR_MESSAGES = {
   
   // General errors
   INTERNAL_SERVER_ERROR: 'Internal server error',
-  TOO_MANY_REQUESTS: 'Too many requests from this IP, try again later.',
+  TOO_MANY_REQUESTS: 'Too many requests from this IP, try again later after 15 minutes',
   INVALID_CSRF_TOKEN: 'Invalid CSRF token',
   FORBIDDEN_ADMIN_ACCESS: 'Forbidden: Admin access required'
 };

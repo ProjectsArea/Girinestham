@@ -16,7 +16,7 @@ export const getCsrfToken = async () => {
 };
 
 export const loginAdmin = async (formData, csrfToken) => {
-  const response = await fetch(`${config.BASE_URL}/admin/login`, {
+  const response = await fetch(`${config.BASE_URL}/admin/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

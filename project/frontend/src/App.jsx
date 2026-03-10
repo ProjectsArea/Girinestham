@@ -8,8 +8,10 @@ import Tournaments from "./public/pages/Tournaments";
 import Contact from "./public/pages/Contact";
 import Donate from "./public/pages/Donate";
 
-/* Admin Pages */
+/* Auth / Admin */
 import Login from "./public/pages/Login";
+import UserLogin from "./public/pages/UserLogin";
+import AdminDashboard from "./admin/pages/AdminDashboard";
 
 function App() {
   return (
@@ -24,8 +26,10 @@ function App() {
         <Route path="/donate" element={<Donate />} />
 
         
-        {/* Admin Routes */}
+        {/* Auth */}
         <Route path="/login" element={<Login />} />
+        <Route path="/user-login" element={<UserLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
       </Routes>
     </Router>

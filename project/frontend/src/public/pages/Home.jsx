@@ -1,208 +1,37 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { fetchHomeData } from "../api/homeApi";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import {
+  LogoUsers,
+  LogoTrophy,
+  LogoHandshake,
+  LogoCalendar,
+  LogoTarget,
+  LogoRocket,
+  LogoBook,
+  LogoMedal,
+  LogoMail,
+  LogoHeart,
+} from "../components/CardLogos";
 import "../css/Home.css";
+
+const HERO_IMAGE = "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&q=80";
+const PROGRAM_IMAGES = [
+  "https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=600&q=80",
+  "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=600&q=80",
+  "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600&q=80",
+  "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=600&q=80",
+];
 
 function Home() {
   const [data, setData] = useState(null);
-  const [activeCard, setActiveCard] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const touchStartRef = useRef(null);
-  const touchEndRef = useRef(null);
-  const autoRotateIntervalRef = useRef(null);
-  const isInteractingRef = useRef(false);
 
   useEffect(() => {
-    const loadData = async () => {
-      const result = await fetchHomeData();
-      setData(result);
-    };
-
-    loadData();
+    fetchHomeData().then(setData);
   }, []);
 
-  // Auto-rotate carousel
-  useEffect(() => {
-    if (data && data.activities && !isInteractingRef.current) {
-      autoRotateIntervalRef.current = setInterval(() => {
-        setActiveCard((prev) => (prev + 1) % data.activities.length);
-      }, 4000);
-      return () => {
-        if (autoRotateIntervalRef.current) {
-          clearInterval(autoRotateIntervalRef.current);
-        }
-      };
-    }
-  }, [data, activeCard]);
-
-  // Smooth card change handler
-  const changeCard = useCallback((direction) => {
-    if (isTransitioning || !data || !data.activities) return;
-    
-    setIsTransitioning(true);
-    isInteractingRef.current = true;
-    
-    // Clear auto-rotate during interaction
-    if (autoRotateIntervalRef.current) {
-      clearInterval(autoRotateIntervalRef.current);
-    }
-    
-    if (direction === 'next') {
-      setActiveCard((prev) => (prev + 1) % data.activities.length);
-    } else {
-      setActiveCard((prev) => (prev - 1 + data.activities.length) % data.activities.length);
-    }
-    
-    // Reset transition state after animation
-    setTimeout(() => {
-      setIsTransitioning(false);
-      isInteractingRef.current = false;
-    }, 600);
-  }, [data, isTransitioning]);
-
-  // Touch handlers for swipe gestures
-  const minSwipeDistance = 50;
-  const maxSwipeTime = 300; // Maximum time for a swipe (ms)
-  const touchStartTimeRef = useRef(null);
-
-  const onTouchStart = useCallback((e) => {
-    touchStartRef.current = e.targetTouches[0].clientX;
-    touchEndRef.current = null;
-    touchStartTimeRef.current = Date.now();
-    isInteractingRef.current = true;
-    
-    // Pause auto-rotate
-    if (autoRotateIntervalRef.current) {
-      clearInterval(autoRotateIntervalRef.current);
-    }
-  }, []);
-
-  const onTouchMove = useCallback((e) => {
-    if (touchStartRef.current === null) return;
-    touchEndRef.current = e.targetTouches[0].clientX;
-    
-    // Prevent scrolling if horizontal swipe
-    const deltaX = Math.abs(touchEndRef.current - touchStartRef.current);
-    const deltaY = Math.abs(e.targetTouches[0].clientY - (e.targetTouches[0].clientY || 0));
-    
-    if (deltaX > deltaY && deltaX > 10) {
-      e.preventDefault();
-    }
-  }, []);
-
-  const onTouchEnd = useCallback(() => {
-    if (touchStartRef.current === null || touchEndRef.current === null) {
-      touchStartRef.current = null;
-      touchEndRef.current = null;
-      isInteractingRef.current = false;
-      return;
-    }
-
-    const distance = touchStartRef.current - touchEndRef.current;
-    const swipeTime = Date.now() - touchStartTimeRef.current;
-    const absDistance = Math.abs(distance);
-    
-    // Check if it's a valid swipe (enough distance and fast enough)
-    const isValidSwipe = absDistance > minSwipeDistance && swipeTime < maxSwipeTime;
-    
-    if (isValidSwipe) {
-      if (distance > 0) {
-        // Swipe left - go to next
-        changeCard('next');
-      } else {
-        // Swipe right - go to previous
-        changeCard('prev');
-      }
-    }
-    
-    // Reset touch state
-    touchStartRef.current = null;
-    touchEndRef.current = null;
-    touchStartTimeRef.current = null;
-    
-    // Resume auto-rotate after a delay
-    setTimeout(() => {
-      isInteractingRef.current = false;
-    }, 1000);
-  }, [changeCard]);
-
-  // Mouse drag support for desktop
-  const onMouseDown = useCallback((e) => {
-    touchStartRef.current = e.clientX;
-    touchEndRef.current = null;
-    touchStartTimeRef.current = Date.now();
-    isInteractingRef.current = true;
-    
-    if (autoRotateIntervalRef.current) {
-      clearInterval(autoRotateIntervalRef.current);
-    }
-  }, []);
-
-  const onMouseMove = useCallback((e) => {
-    if (touchStartRef.current === null) return;
-    touchEndRef.current = e.clientX;
-  }, []);
-
-  const onMouseUp = useCallback(() => {
-    if (touchStartRef.current === null || touchEndRef.current === null) {
-      touchStartRef.current = null;
-      touchEndRef.current = null;
-      isInteractingRef.current = false;
-      return;
-    }
-
-    const distance = touchStartRef.current - touchEndRef.current;
-    const swipeTime = Date.now() - touchStartTimeRef.current;
-    const absDistance = Math.abs(distance);
-    
-    const isValidSwipe = absDistance > minSwipeDistance && swipeTime < maxSwipeTime;
-    
-    if (isValidSwipe) {
-      if (distance > 0) {
-        changeCard('next');
-      } else {
-        changeCard('prev');
-      }
-    }
-    
-    touchStartRef.current = null;
-    touchEndRef.current = null;
-    touchStartTimeRef.current = null;
-    
-    setTimeout(() => {
-      isInteractingRef.current = false;
-    }, 1000);
-  }, [changeCard]);
-
-  // Card click handler
-  const handleCardClick = useCallback((index) => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    isInteractingRef.current = true;
-    
-    if (autoRotateIntervalRef.current) {
-      clearInterval(autoRotateIntervalRef.current);
-    }
-    
-    setActiveCard(index);
-    
-    setTimeout(() => {
-      setIsTransitioning(false);
-      isInteractingRef.current = false;
-    }, 600);
-  }, [isTransitioning]);
-
-  // Navigation handlers
-  const handlePrev = useCallback(() => {
-    changeCard('prev');
-  }, [changeCard]);
-
-  const handleNext = useCallback(() => {
-    changeCard('next');
-  }, [changeCard]);
-
-  // Early return for loading state
   if (!data) {
     return (
       <div className="loading-container">
@@ -212,275 +41,252 @@ function Home() {
     );
   }
 
-  // Constants for activities
-  const activityIcons = ['🏋️', '👥', '🏆', '📚', '🤝'];
-  const activityColors = [
-    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
-  ];
-
   return (
-    <div className="home-page">
+    <div className="home-page page-enter">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
+      {/* Hero */}
+      <section className="home-hero hero-with-image section-geom" style={{ backgroundImage: `url(${HERO_IMAGE})` }}>
+        <div className="hero-overlay" />
+        <div className="hero-overlay-blend" />
+        <div className="container home-hero-inner">
           {data.logo && (
-            <div className="logo-container">
-              <img src={data.logo} alt="Foundation Logo" className="logo" />
+            <div className="home-hero-logo-wrap">
+              <img src={data.logo} alt="" className="home-hero-logo" />
             </div>
           )}
-          <h1 className="hero-title">{data.organizationName}</h1>
-          <h2 className="hero-headline">{data.heroMessage.headline}</h2>
-          <p className="hero-subtext">{data.heroMessage.subText}</p>
-          <div className="hero-buttons">
-            <Link to="/about" className="btn btn-primary">Learn More</Link>
-            <Link to="/donate" className="btn btn-secondary">Support Us</Link>
+          <p className="home-hero-label">Welcome</p>
+          <h1 className="home-hero-title">{data.organizationName}</h1>
+          <h2 className="home-hero-headline">{data.heroSection.headline}</h2>
+          <p className="home-hero-subtext">{data.heroSection.subText}</p>
+          <div className="home-hero-strip">
+            <a href="#impact" className="home-strip-item">
+              <LogoTrophy className="strip-icon" aria-hidden />
+              <span>Impact</span>
+            </a>
+            <span className="home-strip-dot" aria-hidden="true" />
+            <a href="#programs" className="home-strip-item">
+              <span>Programs</span>
+            </a>
+            <span className="home-strip-dot" aria-hidden="true" />
+            <a href="#involved" className="home-strip-item">
+              <LogoRocket className="strip-icon" aria-hidden />
+              <span>Get involved</span>
+            </a>
           </div>
-        </div>
-        <div className="hero-decoration">
-          <div className="floating-shape shape-1"></div>
-          <div className="floating-shape shape-2"></div>
-          <div className="floating-shape shape-3"></div>
-        </div>
-      </section>
-
-      {/* Stats & Vision/Mission Side by Side */}
-      <section className="combined-section">
-        <div className="container-wide">
-          <div className="side-by-side-layout">
-            {/* Stats Section */}
-            <div className="stats-container">
-              <h2 className="section-title-left">Our Impact</h2>
-              <div className="stats-grid-compact">
-                <div className="stat-card" data-stat="students">
-                  <div className="stat-icon">👥</div>
-                  <div className="stat-number">{data.stats.students}+</div>
-                  <div className="stat-label">Students</div>
-                  <div className="stat-shine"></div>
-                </div>
-                <div className="stat-card" data-stat="tournaments">
-                  <div className="stat-icon">🏆</div>
-                  <div className="stat-number">{data.stats.tournaments}</div>
-                  <div className="stat-label">Tournaments</div>
-                  <div className="stat-shine"></div>
-                </div>
-                <div className="stat-card" data-stat="volunteers">
-                  <div className="stat-icon">🤝</div>
-                  <div className="stat-number">{data.stats.volunteers}</div>
-                  <div className="stat-label">Volunteers</div>
-                  <div className="stat-shine"></div>
-                </div>
-                <div className="stat-card" data-stat="years">
-                  <div className="stat-icon">⭐</div>
-                  <div className="stat-number">{data.stats.yearsOfService}</div>
-                  <div className="stat-label">Years</div>
-                  <div className="stat-shine"></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Vision & Mission */}
-            <div className="vm-container">
-              <div className="vm-card vision-card">
-                <div className="vm-icon">🎯</div>
-                <h3>Our Vision</h3>
-                <p>{data.vision}</p>
-                <div className="vm-ripple"></div>
-              </div>
-              <div className="vm-card mission-card">
-                <div className="vm-icon">🚀</div>
-                <h3>Our Mission</h3>
-                <p>{data.mission}</p>
-                <div className="vm-ripple"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* What We Do - Carousel with Overlapping Cards */}
-      <section className="activities-carousel-section">
-        <div className="container-wide">
-          <h2 className="section-title-center">What We Do</h2>
-          <div className="carousel-container">
-            <button className="carousel-nav carousel-prev" onClick={handlePrev} aria-label="Previous">
-              ‹
-            </button>
-            <div 
-              className="carousel-wrapper"
-              onTouchStart={onTouchStart}
-              onTouchMove={onTouchMove}
-              onTouchEnd={onTouchEnd}
-              onMouseDown={onMouseDown}
-              onMouseMove={onMouseMove}
-              onMouseUp={onMouseUp}
-              onMouseLeave={onMouseUp}
-            >
-              {data.activities.map((activity, index) => {
-                let position = index - activeCard;
-                // Normalize position to show 5 cards (-2, -1, 0, 1, 2)
-                if (position > data.activities.length / 2) {
-                  position -= data.activities.length;
-                } else if (position < -data.activities.length / 2) {
-                  position += data.activities.length;
-                }
-                
-                const isActive = position === 0;
-                const isLeft2 = position === -2;
-                const isLeft1 = position === -1;
-                const isRight1 = position === 1;
-                const isRight2 = position === 2;
-                const isVisible = Math.abs(position) <= 2;
-                
-                return (
-                  <div
-                    key={index}
-                    className={`carousel-card ${isActive ? 'active' : ''} ${isLeft2 ? 'left-2' : ''} ${isLeft1 ? 'left-1' : ''} ${isRight1 ? 'right-1' : ''} ${isRight2 ? 'right-2' : ''}`}
-                    style={{
-                      '--card-position': Math.abs(position),
-                      '--card-color': activityColors[index],
-                      zIndex: isActive ? 10 : isVisible ? 8 - Math.abs(position) : 0,
-                      opacity: isVisible ? 1 : 0,
-                      pointerEvents: isVisible ? 'auto' : 'none'
-                    }}
-                    onClick={() => handleCardClick(index)}
-                  >
-                    <div className="carousel-card-content">
-                      <div className="carousel-card-number">{String(index + 1).padStart(2, '0')}</div>
-                      <div className="carousel-card-icon">{activityIcons[index] || '✨'}</div>
-                      <h3>{activity}</h3>
-                      {isActive && (
-                        <div className="carousel-card-description">
-                          <p>Discover how we make a difference through {activity.toLowerCase()} and create lasting impact in our community.</p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="carousel-card-glow"></div>
-                  </div>
-                );
-              })}
-            </div>
-            <button className="carousel-nav carousel-next" onClick={handleNext} aria-label="Next">
-              ›
-            </button>
-          </div>
-          <div className="carousel-dots">
-            {data.activities.map((_, index) => (
-              <button
-                key={index}
-                className={`carousel-dot ${index === activeCard ? 'active' : ''}`}
-                onClick={() => handleCardClick(index)}
-                aria-label={`Go to slide ${index + 1}`}
-              />
+          <div className="home-hero-btns">
+            {data.heroSection.ctaButtons.map((btn, i) => (
+              <Link key={i} to={btn.link} className="home-btn home-btn-primary">
+                {btn.label}
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* About Preview & Get Involved Side by Side */}
-      <section className="combined-section-2">
-        <div className="container-wide">
-          <div className="side-by-side-layout-2">
-            {/* About Preview */}
-            <div className="about-preview-container">
-              <div className="about-preview-card">
-                <div className="about-preview-icon">📖</div>
-                <h2>About Us</h2>
-                <p>{data.aboutPreview}</p>
-                <Link to="/about" className="btn btn-outline">Discover More</Link>
-                <div className="about-preview-decoration"></div>
+      {/* Impact — asymmetric bento + typography */}
+      <section id="impact" className="home-impact-bento">
+        <div className="container home-impact-bento-inner">
+          <p className="home-impact-eyebrow">Our impact</p>
+          <div className="home-impact-layout">
+            <div className="home-impact-hero card-reveal">
+              <span className="home-impact-hero-number" aria-hidden="true">{data.impactMetrics.studentsTrained}+</span>
+              <div className="home-impact-hero-content">
+                <LogoUsers className="home-impact-hero-icon" aria-hidden />
+                <span className="home-impact-hero-value">{data.impactMetrics.studentsTrained}+</span>
+                <span className="home-impact-hero-label">Students trained</span>
               </div>
             </div>
-
-            {/* Get Involved */}
-            <div className="involvement-container">
-              <h2 className="section-title-left">Get Involved</h2>
-              <div className="involvement-grid-compact">
-                <Link to="/about" className="involvement-card">
-                  <div className="involvement-icon">📖</div>
-                  <h3>About Us</h3>
-                  <p>Learn more</p>
-                  <div className="involvement-arrow">→</div>
-                </Link>
-                <Link to="/tournaments" className="involvement-card">
-                  <div className="involvement-icon">🏅</div>
-                  <h3>Tournaments</h3>
-                  <p>View events</p>
-                  <div className="involvement-arrow">→</div>
-                </Link>
-                <Link to="/contact" className="involvement-card">
-                  <div className="involvement-icon">📧</div>
-                  <h3>Contact</h3>
-                  <p>Get in touch</p>
-                  <div className="involvement-arrow">→</div>
-                </Link>
-                <Link to="/donate" className="involvement-card">
-                  <div className="involvement-icon">💝</div>
-                  <h3>Donate</h3>
-                  <p>Support us</p>
-                  <div className="involvement-arrow">→</div>
-                </Link>
+            <div className="home-impact-strips">
+              <div className="home-impact-strip-item card-reveal">
+                <span className="home-impact-strip-bar" aria-hidden="true" />
+                <span className="home-impact-strip-value">{data.impactMetrics.tournamentsOrganized}</span>
+                <span className="home-impact-strip-label">Tournaments</span>
+              </div>
+              <div className="home-impact-strip-item card-reveal">
+                <span className="home-impact-strip-bar" aria-hidden="true" />
+                <span className="home-impact-strip-value">{data.impactMetrics.coachesAssociated}</span>
+                <span className="home-impact-strip-label">Coaches</span>
+              </div>
+              <div className="home-impact-strip-item card-reveal">
+                <span className="home-impact-strip-bar" aria-hidden="true" />
+                <span className="home-impact-strip-value">{data.impactMetrics.yearsOfService}</span>
+                <span className="home-impact-strip-label">Years</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Contact & Social Side by Side */}
-      <section className="contact-social-section">
-        <div className="container-wide">
-          <div className="contact-social-grid">
-            <div className="contact-info-card">
-              <div className="contact-card-header">
-                <div className="contact-header-icon">📞</div>
-                <h3>Contact Information</h3>
+      {/* Vision & Mission */}
+      <section className="home-section home-vm">
+        <div className="container home-vm-grid">
+          <div className="home-vm-card card-reveal">
+            <div className="home-vm-accent" aria-hidden="true" />
+            <LogoTarget className="card-logo home-vm-logo" />
+            <h2 className="home-block-title">Our Vision</h2>
+            <p>{data.foundationOverview.vision}</p>
+          </div>
+          <div className="home-vm-card card-reveal">
+            <div className="home-vm-accent" aria-hidden="true" />
+            <LogoRocket className="card-logo home-vm-logo" />
+            <h2 className="home-block-title">Our Mission</h2>
+            <p>{data.foundationOverview.mission}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Core values — pills */}
+      <section className="home-section home-values">
+        <div className="container">
+          <h2 className="home-section-title">Core values</h2>
+          <div className="home-values-wrap">
+            {data.values.map((value, i) => (
+              <div key={i} className="home-value-pill card-reveal">
+                <LogoMedal className="card-logo home-value-icon" />
+                <span>{value}</span>
               </div>
-              <div className="contact-details">
-                <div className="contact-item">
-                  <span className="contact-icon">📍</span>
-                  <span>{data.contact.officeAddress}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Sports programs — bento: 1 featured + 3 */}
+      <section id="programs" className="home-section home-programs">
+        <div className="container">
+          <h2 className="home-section-title">Sports programs</h2>
+          <div className="home-programs-bento">
+            <Link to="/about" className="home-program-featured card-reveal">
+              <div
+                className="home-program-featured-bg"
+                style={{ backgroundImage: `url(${PROGRAM_IMAGES[0]})` }}
+              >
+                <div className="home-program-featured-overlay" aria-hidden="true" />
+                <div className="home-program-featured-content">
+                  <LogoTrophy className="card-logo home-program-icon" aria-hidden />
+                  <h3>{data.sportsPrograms[0]?.name}</h3>
+                  <p>{data.sportsPrograms[0]?.description}</p>
+                  <span className="home-program-cta">Learn more →</span>
                 </div>
-                <div className="contact-item">
-                  <span className="contact-icon">📞</span>
-                  <span>{data.contact.phone}</span>
-                </div>
-                <div className="contact-item">
-                  <span className="contact-icon">✉️</span>
-                  <span>{data.contact.email}</span>
-                </div>
               </div>
-            </div>
-            <div className="social-links-card">
-              <div className="social-card-header">
-                <div className="social-header-icon">🌐</div>
-                <h3>Follow Us</h3>
-              </div>
-              <div className="social-links">
-                <a href={data.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="social-link">
-                  <span className="social-icon">📘</span>
-                  <span>Facebook</span>
-                  <span className="social-arrow">→</span>
-                </a>
-                <a href={data.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="social-link">
-                  <span className="social-icon">📷</span>
-                  <span>Instagram</span>
-                  <span className="social-arrow">→</span>
-                </a>
-                <a href={data.socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="social-link">
-                  <span className="social-icon">📺</span>
-                  <span>YouTube</span>
-                  <span className="social-arrow">→</span>
-                </a>
-              </div>
+            </Link>
+            <div className="home-program-list">
+              {data.sportsPrograms.slice(1, 4).map((program, i) => (
+                <Link key={i} to="/about" className="home-program-card card-reveal">
+                  <div
+                    className="home-program-card-bg"
+                    style={{ backgroundImage: `url(${PROGRAM_IMAGES[(i + 1) % PROGRAM_IMAGES.length]})` }}
+                  >
+                    <div className="home-program-card-overlay" aria-hidden="true" />
+                  </div>
+                  <div className="home-program-card-content">
+                    <h4>{program.name}</h4>
+                    <p>{program.description}</p>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
       </section>
+
+      {/* About + Get involved */}
+      <section id="involved" className="home-section home-about-involved">
+        <div className="container home-ai-grid">
+          <div className="home-about-card card-reveal">
+            <div className="home-card-accent" aria-hidden="true" />
+            <LogoBook className="card-logo home-about-logo" />
+            <h2 className="home-block-title">About us</h2>
+            <p className="home-about-desc">{data.foundationOverview.description}</p>
+            <div className="home-focus-tags">
+              {data.focusAreas.map((area, i) => (
+                <span key={i} className="home-focus-tag">{area}</span>
+              ))}
+            </div>
+            <Link to="/about" className="home-btn home-btn-outline">Discover more</Link>
+          </div>
+          <div className="home-involved-wrap">
+            <h2 className="home-section-title">Get involved</h2>
+            <div className="home-involved-grid">
+              <Link to="/about" className="home-involved-card card-reveal">
+                <LogoBook className="card-logo" />
+                <h4>About</h4>
+                <p>Learn more</p>
+                <span className="home-involved-arrow">→</span>
+              </Link>
+              <Link to="/tournaments" className="home-involved-card card-reveal">
+                <LogoTrophy className="card-logo" />
+                <h4>Tournaments</h4>
+                <p>View events</p>
+                <span className="home-involved-arrow">→</span>
+              </Link>
+              <Link to="/contact" className="home-involved-card card-reveal">
+                <LogoMail className="card-logo" />
+                <h4>Contact</h4>
+                <p>Get in touch</p>
+                <span className="home-involved-arrow">→</span>
+              </Link>
+              <Link to="/donate" className="home-involved-card card-reveal">
+                <LogoHeart className="card-logo" />
+                <h4>Donate</h4>
+                <p>Support us</p>
+                <span className="home-involved-arrow">→</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Athlete development */}
+      <section className="home-section home-athlete">
+        <div className="container">
+          <h2 className="home-section-title">Athlete development</h2>
+          <div className="home-athlete-grid">
+            {data.athleteDevelopment.programs.map((program, i) => (
+              <div key={i} className="home-athlete-card card-reveal">
+                <LogoTarget className="card-logo" />
+                <span>{program}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Community programs */}
+      <section className="home-section home-community">
+        <div className="container">
+          <h2 className="home-section-title">Community programs</h2>
+          <div className="home-community-grid">
+            {data.communityPrograms.map((program, i) => (
+              <div key={i} className="home-community-card card-reveal">
+                <LogoUsers className="card-logo" />
+                <span>{program}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="home-section home-cta">
+        <div className="container">
+          <div className="home-cta-card card-reveal">
+            <div className="home-cta-accent" aria-hidden="true" />
+            <LogoRocket className="card-logo home-cta-logo" aria-hidden />
+            <h2 className="home-cta-title">{data.callToAction.title}</h2>
+            <p className="home-cta-desc">{data.callToAction.description}</p>
+            <div className="home-cta-btns">
+              {data.callToAction.buttons.map((btn, i) => (
+                <Link key={i} to={btn.link} className="home-btn home-btn-primary">
+                  {btn.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Footer organizationName={data.organizationName} socialLinks={data.socialLinks} />
     </div>
   );
 }

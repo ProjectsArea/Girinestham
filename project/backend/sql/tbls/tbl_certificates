@@ -1,0 +1,32 @@
+CREATE TABLE tbl_certificates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    certificate_code VARCHAR(50) UNIQUE,
+
+    certificate_type_id INT NOT NULL,
+
+    student_id INT,
+
+    membership_id INT,
+    tournament_id INT,
+
+    issue_date DATE,
+
+    generated_by INT,
+    delivered_by INT,
+
+    delivery_mode VARCHAR(50),
+
+    certificate_file VARCHAR(255),
+
+    remarks TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (certificate_type_id) REFERENCES mst_certificate_types(id),
+    FOREIGN KEY (student_id) REFERENCES tbl_students(id),
+    FOREIGN KEY (membership_id) REFERENCES tbl_memberships(id),
+    FOREIGN KEY (tournament_id) REFERENCES tbl_tournaments(id),
+    FOREIGN KEY (generated_by) REFERENCES tbl_users(id),
+    FOREIGN KEY (delivered_by) REFERENCES tbl_users(id)
+);
