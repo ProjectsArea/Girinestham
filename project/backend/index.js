@@ -31,25 +31,25 @@ app.use(cors({ //cors
 }));
 /* ------------------ RATE LIMIT ------------------ */
 const limiter = rateLimit({
-  windowMs: SECURITY_CONSTANTS.RATE_LIMIT_WINDOW_MS,
-  max: SECURITY_CONSTANTS.RATE_LIMIT_MAX_REQUESTS,
-  message: ERROR_MESSAGES.TOO_MANY_REQUESTS,
-  handler: (req, res) => {
-    logApplicationEvent({
-      logLevel: "WARNING",
-      logType: "security",
-      method: req.method,
-      endpoint: req.originalUrl,
-      statusCode: HTTP_STATUS.TOO_MANY_REQUESTS,
-      message: "Rate limit exceeded",
-      responseTime: 0,
-      req,
-    });
+   windowMs: SECURITY_CONSTANTS.RATE_LIMIT_WINDOW_MS,
+   max: SECURITY_CONSTANTS.RATE_LIMIT_MAX_REQUESTS,
+   message: ERROR_MESSAGES.TOO_MANY_REQUESTS,
+   handler: (req, res) => {
+      logApplicationEvent({
+         logLevel: "WARNING",
+         logType: "security",
+         method: req.method,
+         endpoint: req.originalUrl,
+         statusCode: HTTP_STATUS.TOO_MANY_REQUESTS,
+         message: "Rate limit exceeded",
+         responseTime: 0,
+         req,
+      });
 
-    res.status(HTTP_STATUS.TOO_MANY_REQUESTS).json({
-      message: ERROR_MESSAGES.TOO_MANY_REQUESTS,
-    });
-  },
+      res.status(HTTP_STATUS.TOO_MANY_REQUESTS).json({
+         message: ERROR_MESSAGES.TOO_MANY_REQUESTS
+      });
+   }
 });
 app.use(limiter);
 
