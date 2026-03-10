@@ -29,6 +29,7 @@ export const ERROR_MESSAGES = {
   DATABASE_ERROR: 'Database error',
   EMAIL_ALREADY_EXISTS: 'Email already exists',
   USER_NOT_FOUND: 'User not found',
+  STUDENT_ALREADY_EXISTS: "Student already exists with these details",
   
   // General errors
   INTERNAL_SERVER_ERROR: 'Internal server error',

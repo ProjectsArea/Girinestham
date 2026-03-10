@@ -10,3 +10,14 @@ CREATE TABLE tbl_students (
     emergency_contact VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+
+ALTER TABLE tbl_students
+ADD photo TEXT,
+ADD sport_interested_id INT,
+ADD approval_status VARCHAR(20) DEFAULT 'pending',
+ADD rejection_remarks TEXT,
+ADD status VARCHAR(20) DEFAULT 'active',
+ADD CONSTRAINT student_name UNIQUE (full_name),
+ADD CONSTRAINT student_email UNIQUE (email),
+ADD CONSTRAINT student_contact UNIQUE (contact_number);

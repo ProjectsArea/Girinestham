@@ -13,6 +13,9 @@ import Login from "./public/pages/Login";
 import UserLogin from "./public/pages/UserLogin";
 import AdminDashboard from "./admin/pages/AdminDashboard";
 
+/* Volunteer */
+import StudentRegistrationDashboard from "./volunteer/pages/StudentRegistrationDashboard";
+
 function App() {
   return (
     <Router>
@@ -30,6 +33,10 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/user-login" element={<UserLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+
+        {/* Volunteer Routes */}
+        <Route path="/volunteer/student-registration" element={<StudentRegistrationDashboard />} />
 
       </Routes>
     </Router>

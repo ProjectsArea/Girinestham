@@ -14,7 +14,8 @@ export const APP_CONFIG = {
     CONTACT: '/api/contact',
     DONATE: '/api/donate',
     ADMIN_AUTH: '/api/admin/auth',
-    ADMIN: '/api/admin'
+    ADMIN: '/api/admin',
+    STUDENTS: "/api/volunteer/students",
   },
   
 };
