@@ -1,4 +1,0 @@
-CREATE TABLE mst_permission_types (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    permission_type_name VARCHAR(50) NOT NULL UNIQUE
-);

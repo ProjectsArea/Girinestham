@@ -1,5 +1,0 @@
-CREATE TABLE mst_payment_purposes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    purpose_name VARCHAR(50) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);

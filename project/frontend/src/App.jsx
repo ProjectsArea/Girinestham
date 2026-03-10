@@ -8,29 +8,32 @@ import Tournaments from "./public/pages/Tournaments";
 import Contact from "./public/pages/Contact";
 import Donate from "./public/pages/Donate";
 
-/* Auth / Admin */
-import Login from "./public/pages/Login";
-import UserLogin from "./public/pages/UserLogin";
+/* Admin Pages */
+import Login from "./admin/pages/Login";
 import AdminDashboard from "./admin/pages/AdminDashboard";
+import UserRoleManagement from "./admin/pages/UserRoleManagement";
+import PageUnderConstruction from "./admin/components/PageUnderConstruction";
 
 function App() {
   return (
     <Router>
       <Routes>
 
+        {/* Admin Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/roles" element={<UserRoleManagement />} />
+        <Route path="/admin/users" element={<UserRoleManagement />} />
+        
+        {/* Admin Routes - Under Construction */}
+        <Route path="/admin/:page" element={<PageUnderConstruction />} />
+        
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/tournaments" element={<Tournaments />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/donate" element={<Donate />} />
-
-        
-        {/* Auth */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/user-login" element={<UserLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
       </Routes>
     </Router>
   );

@@ -10,14 +10,13 @@ export const SECURITY_CONSTANTS = {
   RATE_LIMIT_MAX_REQUESTS: 100,
   
   // Account lockout
-  DEFAULT_MAX_LOGIN_ATTEMPTS: 3,
-  DEFAULT_LOCK_TIME_MINUTES: 5,
+  DEFAULT_MAX_LOGIN_ATTEMPTS: 5,
+  DEFAULT_LOCK_TIME_MINUTES: 15,
   
   // Cookie settings
   COOKIE_OPTIONS: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 24 * 60 * 60 * 1000
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
   }
 };

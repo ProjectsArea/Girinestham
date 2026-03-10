@@ -1,12 +1,15 @@
 import jwt from "jsonwebtoken";
-import { HTTP_STATUS, ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/index.js";
-import { logApplicationEvent } from "../../utils/logger.js";
+import { HTTP_STATUS, ERROR_MESSAGES, APP_CONFIG } from "../constants/index.js";
+import { logApplicationEvent } from "../utils/logger.js";
 
-export const verifyToken = (req, res) => {
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET is not defined in environment variables");
+}
+
+export const authenticateAdmin = (req, res, next) => {
   const startTime = Date.now();
 
   try {
-    /* ================= TOKEN FROM COOKIE OR HEADER ================= */
     const token =
       req.cookies?.token ||
       req.headers.authorization?.split(" ")[1];
@@ -16,11 +19,11 @@ export const verifyToken = (req, res) => {
 
       logApplicationEvent({
         logLevel: "WARNING",
-        logType: "token_verification",
+        logType: "admin_auth",
         method: req.method,
         endpoint: req.originalUrl,
         statusCode: HTTP_STATUS.UNAUTHORIZED,
-        message: "Token verification failed - No token provided",
+        message: "Admin authentication failed - No token provided",
         responseTime,
         req,
       });
@@ -31,45 +34,63 @@ export const verifyToken = (req, res) => {
       });
     }
 
-    /* ================= VERIFY ================= */
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    if (
+      decoded.role !== APP_CONFIG.ADMIN_ROLES.ADMIN &&
+      decoded.role !== APP_CONFIG.ADMIN_ROLES.SUPER_ADMIN
+    ) {
+      const responseTime = Date.now() - startTime;
+
+      logApplicationEvent({
+        logLevel: "WARNING",
+        logType: "admin_auth",
+        method: req.method,
+        endpoint: req.originalUrl,
+        adminId: decoded.id,
+        statusCode: HTTP_STATUS.FORBIDDEN,
+        message: "Forbidden admin access attempt",
+        details: { role: decoded.role },
+        responseTime,
+        req,
+      });
+
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
+        success: false,
+        message: ERROR_MESSAGES.FORBIDDEN_ADMIN_ACCESS,
+      });
+    }
+
+    /* ================= SUCCESS ================= */
     const responseTime = Date.now() - startTime;
 
     logApplicationEvent({
       logLevel: "SUCCESS",
-      logType: "token_verification",
+      logType: "admin_auth",
       method: req.method,
       endpoint: req.originalUrl,
       adminId: decoded.id,
       statusCode: HTTP_STATUS.OK,
-      message: "Token verified successfully",
+      message: "Admin authenticated successfully",
       details: { role: decoded.role },
       responseTime,
       req,
     });
 
-    return res.status(HTTP_STATUS.OK).json({
-      success: true,
-      message: SUCCESS_MESSAGES.TOKEN_VALID,
-      admin: {
-        id: decoded.id,
-        role: decoded.role,
-      },
-    });
-  } catch (error) {
+    req.admin = decoded;
+    next();
+  } catch (err) {
     const responseTime = Date.now() - startTime;
 
-    /* ================= TOKEN EXPIRED ================= */
-    if (error.name === "TokenExpiredError") {
+    if (err.name === "TokenExpiredError") {
       logApplicationEvent({
         logLevel: "WARNING",
-        logType: "token_verification",
+        logType: "admin_auth",
         method: req.method,
         endpoint: req.originalUrl,
         statusCode: HTTP_STATUS.UNAUTHORIZED,
-        message: "Token expired",
-        stackTrace: error.stack,
+        message: "Admin token expired",
+        stackTrace: err.stack,
         responseTime,
         req,
       });
@@ -80,15 +101,14 @@ export const verifyToken = (req, res) => {
       });
     }
 
-    /* ================= INVALID TOKEN ================= */
     logApplicationEvent({
       logLevel: "ERROR",
-      logType: "token_verification",
+      logType: "admin_auth",
       method: req.method,
       endpoint: req.originalUrl,
       statusCode: HTTP_STATUS.UNAUTHORIZED,
-      message: "Invalid token",
-      stackTrace: error.stack,
+      message: "Invalid admin token",
+      stackTrace: err.stack,
       responseTime,
       req,
     });

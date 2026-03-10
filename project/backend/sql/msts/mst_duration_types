@@ -1,7 +1,0 @@
-CREATE TABLE mst_duration_types (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    duration_name VARCHAR(50) NOT NULL UNIQUE,
-    duration_in_days INT NOT NULL,
-    status TINYINT DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);

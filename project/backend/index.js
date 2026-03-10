@@ -1,36 +1,28 @@
 import express from "express";
-import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
-import helmet from "helmet";
 import cors from "cors";
+import dotenv from "dotenv";
+import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import csrf from "csurf";
-import { APP_CONFIG } from "./constants/appConfig.js";
-import { SECURITY_CONSTANTS } from "./constants/security.js";
-import { ERROR_MESSAGES, HTTP_STATUS } from "./constants/httpStatus.js";
+import cookieParser from "cookie-parser";
+import { APP_CONFIG, SECURITY_CONSTANTS, ERROR_MESSAGES, HTTP_STATUS } from "./constants/index.js";
 import { logApplicationEvent } from "./utils/logger.js";
 
 dotenv.config();
 const app = express();
 
-/* ========================================= BODY + COOKIES ========================================= */
-app.use(express.json());
-app.use(cookieParser());
+/* ================= SECURITY HEADERS ================= */
+app.use(helmet());
 
-/* ========================================= SECURITY HEADERS ========================================== */
-/* ------------------ HELMET ------------------ */
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
-}));
+/* ================= TRUST PROXY ================= */
+app.set("trust proxy", APP_CONFIG.TRUST_PROXY);
 
-/* ------------------ CORS ------------------ */
-app.use(cors({ //cors
+/* ================= CORS ================= */
+app.use(cors({
    origin: APP_CONFIG.CORS_ORIGINS,
    credentials: APP_CONFIG.CORS_CREDENTIALS
 }));
 
-/* ------------------ RATE LIMIT ------------------ */
+/* ================= RATE LIMIT ================= */
 const limiter = rateLimit({
    windowMs: SECURITY_CONSTANTS.RATE_LIMIT_WINDOW_MS,
    max: SECURITY_CONSTANTS.RATE_LIMIT_MAX_REQUESTS,
@@ -54,43 +46,39 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-/* ------------------ CSRF PROTECTION ------------------ */
-const csrfProtection = csrf({
-   cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
-   },
-   handler: (req, res) => {
+/* ================= BODY + COOKIES ================= */
+app.use(express.json());
+app.use(cookieParser());
+
+/* ================= GLOBAL REQUEST LOGGER ================= */
+app.use((req, res, next) => {
+   const startTime = Date.now();
+
+   res.on("finish", () => {
+      const responseTime = Date.now() - startTime;
+
       logApplicationEvent({
-         logLevel: "WARNING",
-         logType: "security",
+         logLevel: res.statusCode >= 500
+            ? "ERROR"
+            : res.statusCode >= 400
+            ? "WARNING"
+            : "INFO",
+         logType: "api_request",
          method: req.method,
          endpoint: req.originalUrl,
-         statusCode: HTTP_STATUS.FORBIDDEN,
-         message: "CSRF token missing or invalid",
-         responseTime: 0,
+         adminId: req.admin?.id || null,
+         userId: req.user?.id || null,
+         statusCode: res.statusCode,
+         message: `API ${req.method} ${req.originalUrl}`,
+         responseTime,
          req,
       });
-      res.status(HTTP_STATUS.FORBIDDEN).json({
-         message: ERROR_MESSAGES.FORBIDDEN
-      });
-   }
-});
-app.use(csrfProtection);
+   });
 
-app.get("/api/csrf-token", (req, res) => {
-   res.json({ csrfToken: req.csrfToken() });
+   next();
 });
 
-
-
-/* ========================================= ROUTES ========================================== */
-
-app.get("/", (req, res) => {
-   res.send("welcome to backend : Girinestham Project");
-});
-
-/* ----------------- PUBLIC ROUTES ----------------- */
+/* ================= PUBLIC ROUTES ================= */
 import homeRoutes from "./routes/public/homeRoutes.js";
 import aboutRoutes from "./routes/public/aboutRoutes.js";
 import tournamentRoutes from "./routes/public/tournamentRoutes.js";
@@ -103,16 +91,35 @@ app.use(APP_CONFIG.API_ROUTES.TOURNAMENTS, tournamentRoutes);
 app.use(APP_CONFIG.API_ROUTES.CONTACT, contactRoutes);
 app.use(APP_CONFIG.API_ROUTES.DONATE, donateRoutes);
 
-/* ----------------- ADMIN ROUTES ----------------- */
-import adminAuthRoutes from "./routes/admin/authRoutes.js";
+/* ================= ADMIN ROUTES ================= */
 import adminRoutes from "./routes/admin/adminRoutes.js";
-app.use(APP_CONFIG.API_ROUTES.ADMIN_AUTH, adminAuthRoutes);
 app.use(APP_CONFIG.API_ROUTES.ADMIN, adminRoutes);
 
-/* ----------------- SERVER START ----------------- */
+/* ================= ERROR HANDLER ================= */
+app.use((err, req, res, next) => {
+
+   const responseTime = 0;
+
+   logApplicationEvent({
+      logLevel: "ERROR",
+      logType: "system",
+      method: req.method,
+      endpoint: req.originalUrl,
+      statusCode: err.status || 500,
+      message: err.message || "Unhandled server error",
+      stackTrace: err.stack,
+      responseTime,
+      req,
+   });
+
+   res.status(err.status || 500).json({
+      message: ERROR_MESSAGES.INTERNAL_SERVER_ERROR
+   });
+});
+
+/* ================= SERVER START ================= */
 const PORT = process.env.PORT || APP_CONFIG.DEFAULT_PORT;
 
 app.listen(PORT, () => {
-   console.log(`🚀 HTTP Server running on port http://localhost:${PORT}/`);
+   console.log(`🚀 Server running on port ${PORT}`);
 });
-

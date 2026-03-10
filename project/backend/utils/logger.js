@@ -21,7 +21,7 @@ export const logApplicationEvent = ({
     // Temporarily disable database logging to prevent table errors
     // TODO: Create proper application_logs table and re-enable
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[${logLevel}] ${message}`, {
+      console.log(`[${logLevel}] ${message} hi messge`, {
         logType,
         method,
         endpoint,

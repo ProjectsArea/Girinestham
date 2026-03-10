@@ -1,15 +1,23 @@
-import express from "express";
-import { getRolesController } from "../../controllers/admin/adminController.js";
+import express from 'express';
+import { login, logout } from '../../controllers/admin/adminController.js';
+import { verifyToken } from '../../controllers/admin/authController.js';
+import { authenticateAdmin } from '../../middleware/adminAuth.js';
+
+// Import role and user routes
+import roleRoutes from './roleRoutes.js';
+import userRoutes from './userRoutes.js';
 
 const router = express.Router();
 
-// Middleware to add start time for response time calculation
-router.use((req, res, next) => {
-    req.startTime = Date.now();
-    next();
-});
+// Authentication routes
+router.post('/login', login);
+router.get('/verify', authenticateAdmin, verifyToken);
+router.post('/logout', authenticateAdmin, logout);
 
-// GET /api/admin/roles - Get all active roles
-router.get("/roles", getRolesController);
+// Role management routes
+router.use('/roles', roleRoutes);
+
+// User management routes
+router.use('/users', userRoutes);
 
 export default router;

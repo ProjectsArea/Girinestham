@@ -1,4 +1,0 @@
-CREATE TABLE mst_module_statuses (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    status_name VARCHAR(50) NOT NULL UNIQUE
-);
