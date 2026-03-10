@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "../css/Navbar.css";
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const loginRef = useRef(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -26,19 +28,30 @@ function Navbar() {
     };
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (loginRef.current && !loginRef.current.contains(e.target)) {
+        setIsLoginOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
   const isActive = (path) => {
     return location.pathname === path;
   };
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+    setIsLoginOpen(false);
   };
 
   return (
-    <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
+    <nav className={`navbar navbar-fixed ${isScrolled ? 'scrolled' : ''}`}>
       <div className="navbar-container">
         <Link to="/" className="navbar-logo" onClick={closeMenu}>
-          <span className="logo-icon">🏆</span>
+          <span className="logo-symbol" aria-hidden="true" />
           <span className="logo-text">Giri Nestham</span>
         </Link>
 
@@ -101,14 +114,39 @@ function Navbar() {
               <span>Donate</span>
             </Link>
           </li>
-          <li className="navbar-login-item">
-            <Link 
-              to="/login" 
-              className="navbar-link navbar-login"
-              onClick={closeMenu}
+          <li className="navbar-login-item navbar-login-dropdown-wrap" ref={loginRef}>
+            <button
+              type="button"
+              className={`navbar-link navbar-login navbar-login-trigger ${isLoginOpen ? 'open' : ''}`}
+              onClick={(e) => { e.stopPropagation(); setIsLoginOpen(!isLoginOpen); }}
+              aria-haspopup="true"
+              aria-expanded={isLoginOpen}
+              aria-label="Select login type"
             >
-              <span>Login</span>
-            </Link>
+              <span>Select login type</span>
+              <span className="navbar-login-chevron" aria-hidden="true">{isLoginOpen ? '↑' : '↓'}</span>
+            </button>
+            <div className={`navbar-login-dropdown ${isLoginOpen ? 'open' : ''}`} role="menu">
+              <Link
+                to="/login"
+                className="navbar-login-option"
+                onClick={closeMenu}
+                role="menuitem"
+              >
+                <span className="navbar-login-option-arrow" aria-hidden="true">←</span>
+                Admin
+              </Link>
+              <div className="navbar-login-dropdown-sep" aria-hidden="true" />
+              <Link
+                to="/user-login"
+                className="navbar-login-option"
+                onClick={closeMenu}
+                role="menuitem"
+              >
+                <span className="navbar-login-option-arrow" aria-hidden="true">←</span>
+                User
+              </Link>
+            </div>
           </li>
         </ul>
       </div>

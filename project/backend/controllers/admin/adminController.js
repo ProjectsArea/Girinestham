@@ -1,139 +1,46 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+    import { getRoles } from "../../models/admin/adminController.model.js";
+    import { HTTP_STATUS } from "../../constants/httpStatus.js";
+    import { logApplicationEvent } from "../../utils/logger.js";
 
-import {
-  SECURITY_CONSTANTS,
-  HTTP_STATUS,
-  ERROR_MESSAGES,
-  SUCCESS_MESSAGES,
-} from "../../constants/index.js";
+    export const getRolesController = async (req, res) => {
+        try {
+            const roles = await getRoles();
+            
+            logApplicationEvent({
+                logLevel: "INFO",
+                logType: "admin",
+                method: req.method,
+                endpoint: req.originalUrl,
+                userId: req.userId || null,
+                adminId: req.adminId || null,
+                statusCode: HTTP_STATUS.OK,
+                message: "Roles retrieved successfully",
+                responseTime: Date.now() - req.startTime
+            });
 
-import {
-  findAdminByEmail,
-  updateLoginAttempts,
-  lockAdminAccount,
-  resetLoginAttempts,
-} from "../../models/admin/adminAuth.model.js";
+            res.status(HTTP_STATUS.OK).json({
+                success: true,
+                data: roles,
+                message: "Roles retrieved successfully"
+            });
+        } catch (error) {
+            logApplicationEvent({
+                logLevel: "ERROR",
+                logType: "admin",
+                method: req.method,
+                endpoint: req.originalUrl,
+                userId: req.userId || null,
+                adminId: req.adminId || null,
+                statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+                message: "Failed to retrieve roles",
+                details: error.message,
+                responseTime: Date.now() - req.startTime
+            });
 
-import { logApplicationEvent } from "../../utils/logger.js";
-
-/* ================= LOGIN ================= */
-export const login = async (req, res) => {
-  const startTime = Date.now();
-
-  try {
-    const { email, password } = req.body;
-
-    /* ================= INPUT VALIDATION ================= */
-    if (!email || !password) {
-      const responseTime = Date.now() - startTime;
-
-      logApplicationEvent({
-        logLevel: "WARNING",
-        logType: "auth",
-        method: req.method,
-        endpoint: req.originalUrl,
-        statusCode: HTTP_STATUS.BAD_REQUEST,
-        message: "Login failed - Email or password missing",
-        details: { email },
-        responseTime,
-        req,
-      });
-
-      return res
-        .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ message: ERROR_MESSAGES.EMAIL_PASSWORD_REQUIRED });
-    }
-
-    /* ================= FIND ADMIN ================= */
-    const admin = await findAdminByEmail(email);
-
-    if (!admin) {
-      return res
-        .status(HTTP_STATUS.UNAUTHORIZED)
-        .json({ message: ERROR_MESSAGES.INVALID_CREDENTIALS });
-    }
-
-    /* ================= ACCOUNT LOCK CHECK ================= */
-    if (admin.lock_until && new Date(admin.lock_until) > new Date()) {
-      return res
-        .status(HTTP_STATUS.FORBIDDEN)
-        .json({ message: ERROR_MESSAGES.ACCOUNT_LOCKED });
-    }
-
-    /* ================= PASSWORD CHECK ================= */
-    console.log("Comparing password for email:", email);
-    console.log("Stored hash:", admin.password ? "Hash present" : "No hash found");
-    
-    const valid = await bcrypt.compare(password, admin.password);
-    
-    console.log("Password valid:", valid);
-
-    if (!valid) {
-      const attempts = admin.login_attempts + 1;
-
-      await updateLoginAttempts(admin.id, attempts);
-
-      if (attempts >= SECURITY_CONSTANTS.DEFAULT_MAX_LOGIN_ATTEMPTS) {
-        const lockUntil = new Date(
-          Date.now() +
-            SECURITY_CONSTANTS.DEFAULT_LOCK_TIME_MINUTES * 60000
-        );
-
-        await lockAdminAccount(admin.id, lockUntil);
-      }
-
-      return res
-        .status(HTTP_STATUS.UNAUTHORIZED)
-        .json({ message: ERROR_MESSAGES.INVALID_CREDENTIALS });
-    }
-
-    /* ================= SUCCESS LOGIN ================= */
-    await resetLoginAttempts(admin.id);
-
-    const token = jwt.sign(
-      { id: admin.id, role: admin.role },
-      process.env.JWT_SECRET,
-      { expiresIn: SECURITY_CONSTANTS.JWT_EXPIRES_IN }
-    );
-
-    res.cookie("token", token, SECURITY_CONSTANTS.COOKIE_OPTIONS);
-
-    return res.status(HTTP_STATUS.OK).json({
-      message: SUCCESS_MESSAGES.LOGIN_SUCCESSFUL,
-      token: token,
-      admin: {
-        id: admin.id,
-        email: admin.email,
-        role: admin.role,
-      },
-    });
-  } catch (error) {
-    const responseTime = Date.now() - startTime;
-    
-    logApplicationEvent({
-      logLevel: "ERROR",
-      logType: "auth",
-      method: req.method,
-      endpoint: req.originalUrl,
-      statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-      message: "Login failed with error",
-      details: { error: error.message, email: req.body?.email },
-      responseTime,
-      req,
-    });
-
-    return res
-      .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-      .json({ message: ERROR_MESSAGES.INTERNAL_SERVER_ERROR });
-  }
-};
-
-/* ================= LOGOUT ================= */
-export const logout = (req, res) => {
-  res.clearCookie("token", SECURITY_CONSTANTS.COOKIE_OPTIONS);
-
-  return res
-    .status(HTTP_STATUS.OK)
-    .json({ message: SUCCESS_MESSAGES.LOGOUT_SUCCESSFUL });
-};
+            res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: "Failed to retrieve roles",
+                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+            });
+        }
+    };
