@@ -1,0 +1,147 @@
+/* ============================================
+   Footer — Dark theme, professional, compact
+   ============================================ */
+
+.site-footer {
+  background: #0d0d0d;
+  color: #a3a3a3;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 1.5rem;
+}
+
+.footer-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #fafafa;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+.footer-logo:hover {
+  color: #fafafa;
+  opacity: 0.88;
+}
+
+.footer-logo-symbol {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--accent), var(--accent-hover));
+  flex-shrink: 0;
+  display: block;
+}
+
+.footer-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 2rem;
+  flex: 1;
+  justify-content: flex-start;
+}
+
+.footer-col h4 {
+  color: #e5e5e5;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.65rem;
+}
+
+.footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footer-col li {
+  margin-bottom: 0.35rem;
+}
+
+.footer-col a {
+  color: #a3a3a3;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  transition: color 0.15s ease;
+}
+
+.footer-col a:hover {
+  color: #fafafa;
+}
+
+.footer-col-social {
+  margin-left: auto;
+}
+
+.footer-social {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.footer-social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: #a3a3a3;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.footer-social a:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.footer-bottom {
+  padding-top: 1.25rem;
+}
+
+.footer-legal {
+  font-size: 0.6875rem;
+  color: #737373;
+  margin: 0;
+  line-height: 1.55;
+  max-width: 640px;
+}
+
+@media (max-width: 768px) {
+  .footer-inner {
+    padding: 1.75rem 1rem 1.25rem;
+  }
+
+  .footer-top {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 1.25rem;
+  }
+
+  .footer-col-social {
+    margin-left: 0;
+  }
+
+  .footer-columns {
+    justify-content: flex-start;
+  }
+}

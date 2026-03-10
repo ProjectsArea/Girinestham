@@ -7,6 +7,7 @@ export const HTTP_STATUS = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   CONFLICT: 409,
+  TOO_MANY_REQUESTS: 429,
   INTERNAL_SERVER_ERROR: 500
 };
 
@@ -16,7 +17,7 @@ export const ERROR_MESSAGES = {
   INVALID_TOKEN: 'Invalid token',
   TOKEN_EXPIRED: 'Token expired',
   INVALID_CREDENTIALS: 'Invalid credentials',
-  ACCOUNT_LOCKED: 'Account locked. Please try later.',
+  ACCOUNT_LOCKED: 'Account locked. Please try again after 15mins',
   
   // Validation errors
   REQUIRED_FIELDS: 'Required fields are missing',
@@ -31,7 +32,7 @@ export const ERROR_MESSAGES = {
   
   // General errors
   INTERNAL_SERVER_ERROR: 'Internal server error',
-  TOO_MANY_REQUESTS: 'Too many requests from this IP, try again later.',
+  TOO_MANY_REQUESTS: 'Too many requests from this IP, try again later after 15 minutes',
   INVALID_CSRF_TOKEN: 'Invalid CSRF token',
   FORBIDDEN_ADMIN_ACCESS: 'Forbidden: Admin access required'
 };

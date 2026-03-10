@@ -1,0 +1,18 @@
+CREATE TABLE tbl_donations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    donation_receipt_no VARCHAR(100) UNIQUE,
+    donor_id INT NOT NULL,
+    donation_date DATE,
+    donation_amount DECIMAL(12,2) NOT NULL,
+    donation_mode_id INT,
+    purpose_id INT,
+    payment_reference VARCHAR(150),
+    remarks TEXT,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (donor_id) REFERENCES tbl_donors(id) ON DELETE CASCADE,
+    FOREIGN KEY (donation_mode_id) REFERENCES mst_donation_modes(id),
+    FOREIGN KEY (purpose_id) REFERENCES mst_donation_purposes(id),
+    FOREIGN KEY (created_by) REFERENCES tbl_users(id)
+);

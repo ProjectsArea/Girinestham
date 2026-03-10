@@ -1,0 +1,25 @@
+CREATE TABLE tbl_properties (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    asset_name VARCHAR(150) NOT NULL,
+    category_id INT,
+    quantity INT DEFAULT 1,
+    brand VARCHAR(100),
+    purchase_date DATE,
+    purchase_value DECIMAL(12,2),
+    supplier VARCHAR(150),
+    invoice_number VARCHAR(100),
+    location VARCHAR(150),
+    condition_id INT,
+    asset_status_id INT,
+    responsible_person_id INT,
+    remarks TEXT,
+    physical_verification_date DATE,
+    verified_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (category_id) REFERENCES mst_property_categories(id),
+    FOREIGN KEY (condition_id) REFERENCES mst_property_conditions(id),
+    FOREIGN KEY (asset_status_id) REFERENCES mst_property_statuses(id),
+    FOREIGN KEY (responsible_person_id) REFERENCES tbl_users(id),
+    FOREIGN KEY (verified_by) REFERENCES tbl_users(id)
+);

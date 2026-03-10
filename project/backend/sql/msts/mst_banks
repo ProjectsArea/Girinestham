@@ -1,0 +1,8 @@
+CREATE TABLE mst_banks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    bank_name VARCHAR(150) NOT NULL UNIQUE,
+    account_number VARCHAR(50),
+    ifsc_code VARCHAR(20),
+    branch_name VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
