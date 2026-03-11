@@ -295,3 +295,103 @@ export const updatePaymentDecision = ({
      WHERE id = ?`,
     [paymentStatusId, paymentDecisionId, remarks, decisionDate, paymentId],
   );
+
+export const updateMembershipPayment = async ({
+  referenceId,
+  paymentId,
+  amount,
+  successStatusId,
+}) => {
+  await executeQuery(
+    `UPDATE tbl_student_memberships
+     SET fee_paid = COALESCE(fee_paid, 0) + ?,
+         fee_status_id = ?,
+         payment_id = ?
+     WHERE id = ?`,
+    [amount, successStatusId, paymentId, referenceId],
+  );
+
+  await executeQuery(
+    `UPDATE tbl_memberships m
+     INNER JOIN tbl_student_memberships sm ON sm.membership_id = m.id
+     SET m.total_amount_paid = COALESCE(m.total_amount_paid, 0) + ?
+     WHERE sm.id = ?`,
+    [amount, referenceId],
+  );
+};
+
+export const updateTournamentPayment = async ({
+  referenceId,
+  paymentId,
+  amount,
+  successStatusId,
+}) => {
+  await executeQuery(
+    `UPDATE tbl_tournament_registrations
+     SET fee_paid = COALESCE(fee_paid, 0) + ?,
+         fee_status_id = ?,
+         payment_id = ?
+     WHERE id = ?`,
+    [amount, successStatusId, paymentId, referenceId],
+  );
+
+  await executeQuery(
+    `UPDATE tbl_tournaments t
+     INNER JOIN tbl_tournament_registrations tr ON tr.tournament_id = t.id
+     SET t.total_collected_fee = COALESCE(t.total_collected_fee, 0) + ?
+     WHERE tr.id = ?`,
+    [amount, referenceId],
+  );
+};
+
+export const insertPayment = async (data) => {
+  const rows = await executeQuery(
+    `INSERT INTO tbl_payments (
+      receipt_no,
+      payment_date,
+      payment_time,
+      payment_mode_id,
+      payment_sub_type_id,
+      transaction_id,
+      payment_status_id,
+      collected_by_id,
+      proof,
+      amount,
+      purpose_id,
+      reference_id,
+      payment_decision_id,
+      remarks,
+      decision_date
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      data.receipt_no,
+      data.payment_date,
+      data.payment_time,
+      data.payment_mode_id,
+      data.payment_sub_type_id,
+      data.transaction_id,
+      data.payment_status_id,
+      data.collected_by_id,
+      data.proof,
+      data.amount,
+      data.purpose_id,
+      data.reference_id,
+      data.payment_decision_id,
+      data.remarks,
+      data.decision_date,
+    ],
+  );
+
+  return rows;
+};
+
+export const generateReceiptNumber = async (dateString) => {
+  const rows = await executeQuery(
+    "SELECT COUNT(*) AS total FROM tbl_payments WHERE payment_date = ?",
+    [dateString],
+  );
+
+  const count = Number(rows[0]?.total || 0) + 1;
+  const compactDate = dateString.replaceAll("-", "");
+  return `RCP-${compactDate}-${String(count).padStart(4, "0")}`;
+};

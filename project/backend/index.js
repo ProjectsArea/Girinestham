@@ -114,7 +114,9 @@ app.use(APP_CONFIG.API_ROUTES.ADMIN, adminRoutes);
 
 /* ----------------- VOLUNTEER ROUTES ----------------- */
 import studentRoutes from "./routes/volunteer/studentRoutes.js";
+import paymentRoutes from "./routes/volunteer/paymentRoutes.js";
 app.use(APP_CONFIG.API_ROUTES.STUDENTS, studentRoutes);
+app.use(APP_CONFIG.API_ROUTES.PAYMENTS, paymentRoutes);
 
 /* ----------------- SERVER START ----------------- */
 const PORT = process.env.PORT || APP_CONFIG.DEFAULT_PORT;
