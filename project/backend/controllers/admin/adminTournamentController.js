@@ -65,9 +65,9 @@ export const createTournamentController = async (req, res) => {
     }
 
     if (max_students_allowed !== undefined && max_students_allowed <= 0) {
-  return res.status(400).json({
-    message: "Max students allowed must be greater than 0"
-  });
+      return res.status(400).json({
+        message: "Max students allowed must be greater than 0"
+      });
     }
 
     /* ===== CREATE ===== */
@@ -118,12 +118,36 @@ export const updateTournamentController = async (req, res) => {
 
     const { id } = req.params;
 
+    /* ===== NEW VALIDATIONS ===== */
+
     if (!id) {
       return res.status(400).json({ message: "Tournament ID is required" });
     }
 
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid tournament ID" });
+    }
+
     if (!req.body.tournament_name) {
       return res.status(400).json({ message: "Tournament name is required" });
+    }
+
+    if (req.body.contact_number && !/^[0-9]{10}$/.test(req.body.contact_number)) {
+      return res.status(400).json({
+        message: "Contact number must be 10 digits"
+      });
+    }
+
+    if (req.body.participation_fee && req.body.participation_fee < 0) {
+      return res.status(400).json({
+        message: "Participation fee cannot be negative"
+      });
+    }
+
+    if (req.body.max_students_allowed !== undefined && req.body.max_students_allowed <= 0) {
+      return res.status(400).json({
+        message: "Max students allowed must be greater than 0"
+      });
     }
 
     const updated = await updateTournament(id, req.body);
@@ -228,8 +252,14 @@ export const getTournamentByIdController = async (req, res) => {
 
     const { id } = req.params;
 
+    /* ===== NEW VALIDATION ===== */
+
     if (!id) {
       return res.status(400).json({ message: "Tournament ID is required" });
+    }
+
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid tournament ID" });
     }
 
     const tournament = await getTournamentById(id);
@@ -292,8 +322,14 @@ export const deleteTournamentController = async (req, res) => {
 
     const { id } = req.params;
 
+    /* ===== NEW VALIDATIONS ===== */
+
     if (!id) {
       return res.status(400).json({ message: "Tournament ID is required" });
+    }
+
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid tournament ID" });
     }
 
     const deleted = await deleteTournament(id);

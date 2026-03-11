@@ -1,12 +1,24 @@
 import {
-  createTournamentController
+  createTournamentController,
+  updateTournamentController,
+  deleteTournamentController
 } from "../../controllers/admin/adminTournamentController.js";
 
-import { createTournament } from "../../models/admin/adminTournamentController.model.js";
+import {
+  createTournament,
+  updateTournament,
+  deleteTournament
+} from "../../models/admin/adminTournamentController.model.js";
+
 import { logApplicationEvent } from "../../utils/logger.js";
 
 jest.mock("../../models/admin/adminTournamentController.model.js");
 jest.mock("../../utils/logger.js");
+
+
+/* ======================================================
+   CREATE TOURNAMENT TESTS
+====================================================== */
 
 describe("createTournamentController", () => {
 
@@ -195,6 +207,158 @@ describe("createTournamentController", () => {
         adminId: null
       })
     );
+
+  });
+
+});
+
+
+/* ======================================================
+   UPDATE TOURNAMENT TESTS
+====================================================== */
+
+describe("updateTournamentController", () => {
+
+  let req;
+  let res;
+
+  beforeEach(() => {
+
+    req = {
+      params: { id: 1 },
+      body: {
+        tournament_name: "Updated Cricket",
+        contact_number: "9876543210",
+        participation_fee: 200,
+        max_students_allowed: 100
+      },
+      admin: { id: 1 }
+    };
+
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn()
+    };
+
+    jest.clearAllMocks();
+
+  });
+
+  /* TC11 - Successful Update */
+  test("TC11 - Successful tournament update", async () => {
+
+    updateTournament.mockResolvedValue(true);
+
+    await updateTournamentController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Tournament updated successfully"
+    });
+
+  });
+
+  /* TC12 - Missing Tournament ID */
+  test("TC12 - Tournament ID missing", async () => {
+
+    req.params.id = null;
+
+    await updateTournamentController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Tournament ID is required"
+    });
+
+  });
+
+  /* TC13 - Invalid Tournament ID */
+  test("TC13 - Invalid tournament ID", async () => {
+
+    req.params.id = "abc";
+
+    await updateTournamentController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Invalid tournament ID"
+    });
+
+  });
+
+  /* TC14 - Tournament Not Found */
+  test("TC14 - Tournament not found", async () => {
+
+    updateTournament.mockResolvedValue(false);
+
+    await updateTournamentController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Tournament not found"
+    });
+
+  });
+
+});
+
+
+/* ======================================================
+   DELETE TOURNAMENT TESTS
+====================================================== */
+
+describe("deleteTournamentController", () => {
+
+  let req;
+  let res;
+
+  beforeEach(() => {
+
+    req = {
+      params: { id: 1 },
+      admin: { id: 1 }
+    };
+
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn()
+    };
+
+    jest.clearAllMocks();
+
+  });
+
+  /* TC15 - Successful Delete */
+  test("TC15 - Successful tournament deletion", async () => {
+
+    deleteTournament.mockResolvedValue(true);
+
+    await deleteTournamentController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Tournament deleted successfully"
+    });
+
+  });
+
+  /* TC16 - Tournament Not Found */
+  test("TC16 - Tournament not found", async () => {
+
+    deleteTournament.mockResolvedValue(false);
+
+    await deleteTournamentController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Tournament not found"
+    });
 
   });
 
