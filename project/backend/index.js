@@ -9,6 +9,7 @@ import { APP_CONFIG } from "./constants/appConfig.js";
 import { SECURITY_CONSTANTS } from "./constants/security.js";
 import { ERROR_MESSAGES, HTTP_STATUS } from "./constants/httpStatus.js";
 import { logApplicationEvent } from "./utils/logger.js";
+import { initializeDatabase } from "./config/databaseInitializer.js";
 
 dotenv.config();
 const app = express();
@@ -106,12 +107,14 @@ app.use(APP_CONFIG.API_ROUTES.DONATE, donateRoutes);
 /* ----------------- ADMIN ROUTES ----------------- */
 import adminAuthRoutes from "./routes/admin/authRoutes.js";
 import adminRoutes from "./routes/admin/adminRoutes.js";
+import membershipRoutes from "./routes/admin/membershipRoutes.js";
 app.use(APP_CONFIG.API_ROUTES.ADMIN_AUTH, adminAuthRoutes);
 app.use(APP_CONFIG.API_ROUTES.ADMIN, adminRoutes);
+app.use(APP_CONFIG.API_ROUTES.ADMIN + "/memberships", membershipRoutes);
 
 /* ----------------- SERVER START ----------------- */
 const PORT = process.env.PORT || APP_CONFIG.DEFAULT_PORT;
-
+await initializeDatabase()
 app.listen(PORT, () => {
    console.log(`🚀 HTTP Server running on port http://localhost:${PORT}/`);
 });
