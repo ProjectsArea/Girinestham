@@ -448,3 +448,29 @@ export const rejectPayment = async (paymentId) => {
     [3, paymentId],
   );
 };
+
+export const incrementMembershipAmountPaid = async (amount, membershipId) => {
+  await executeQuery(
+    "UPDATE tbl_memberships SET total_amount_paid = total_amount_paid + ? WHERE id = ?",
+    [amount, membershipId],
+  );
+};
+
+export const insertStudentMembership = async (data) => {
+  await executeQuery(
+    `
+    INSERT INTO tbl_student_memberships (student_id,
+    membership_id,
+    mem_registration_date,
+    payment_id
+    )
+    VALUES (?, ?, ?, ?)
+  `,
+    [
+      data.student_id,
+      data.membership_id,
+      data.registration_date,
+      data.payment_id,
+    ],
+  );
+};

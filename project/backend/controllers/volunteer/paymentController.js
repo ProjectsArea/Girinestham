@@ -13,6 +13,9 @@ import {
   fetchPayments,
   rejectPayment,
   approvePayment,
+  getMembershipById,
+  incrementMembershipAmountPaid,
+  insertStudentMembership,
 } from "../../models/volunteer/paymentController.model.js";
 import { logApplicationEvent } from "../../utils/logger.js";
 import validator from "validator";
@@ -545,6 +548,20 @@ export const approvePaymentHandler = async (req, res) => {
 
   try {
     await approvePayment(id);
+    const payment = await getPaymentById(id);
+
+    //INFO: currently it only handlers membership payments.
+    //TODO: handle tournamnets and other payment purposes.
+    const membership = await getMembershipById(payment.reference_id);
+    await incrementMembershipAmountPaid(payment.amount, membership.id);
+    const studentMembership = await insertStudentMembership({
+      student_id: payment.student_id,
+      membership_id: membership.id,
+      registration_date: new Date(),
+      payment_id: id,
+    });
+    //
+
     logApplicationEvent({
       logLevel: "SUCCESS",
       logType: "payment_approve",
