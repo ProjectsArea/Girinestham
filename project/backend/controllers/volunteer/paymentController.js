@@ -11,6 +11,8 @@ import {
   getPaymentDecisionMap,
   isTransactionIdDuplicate,
   fetchPayments,
+  rejectPayment,
+  approvePayment,
 } from "../../models/volunteer/paymentController.model.js";
 import { logApplicationEvent } from "../../utils/logger.js";
 import validator from "validator";
@@ -536,11 +538,13 @@ export const collectOfflinePayment = async (req, res) => {
   }
 };
 
-export const approvePayment = async (req, res) => {
-  const { paymentId } = req.params;
-  const { status } = req.body;
+export const approvePaymentHandler = async (req, res) => {
+  const startTime = Date.now();
+
+  const { id } = req.params;
 
   try {
+    await approvePayment(id);
     logApplicationEvent({
       logLevel: "SUCCESS",
       logType: "payment_approve",
@@ -549,14 +553,14 @@ export const approvePayment = async (req, res) => {
       adminId: req.user?.id || null,
       statusCode: HTTP_STATUS.CREATED,
       message: "payment approved successfully",
-      details: { payment_id: paymentId },
+      details: { payment_id: id },
       responseTime: Date.now() - startTime,
       req,
     });
     return res.status(HTTP_STATUS.CREATED).json({
       success: true,
       message: "payment approved successfully",
-      details: { payment_id: paymentId },
+      details: { payment_id: id },
     });
   } catch (err) {
     logApplicationEvent({
@@ -567,6 +571,52 @@ export const approvePayment = async (req, res) => {
       adminId: req.user?.id || null,
       statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR,
       message: "payment approve DB error",
+      stackTrace: err.stack,
+      details: err.message,
+      responseTime: Date.now() - startTime,
+      req,
+    });
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: ERROR_MESSAGES.DATABASE_ERROR,
+      details: err.message,
+    });
+  }
+};
+
+export const rejectPaymentHandler = async (req, res) => {
+  const startTime = Date.now();
+
+  const { id } = req.params;
+  try {
+    await rejectPayment(id);
+
+    logApplicationEvent({
+      logLevel: "SUCCESS",
+      logType: "payment_reject",
+      method: req.method,
+      endpoint: req.originalUrl,
+      adminId: req.user?.id || null,
+      statusCode: HTTP_STATUS.CREATED,
+      message: "payment rejected successfully",
+      details: { payment_id: id },
+      responseTime: Date.now() - startTime,
+      req,
+    });
+    return res.status(HTTP_STATUS.CREATED).json({
+      success: true,
+      message: "payment rejected successfully",
+      details: { payment_id: id },
+    });
+  } catch (err) {
+    logApplicationEvent({
+      logLevel: "ERROR",
+      logType: "payment_reject",
+      method: req.method,
+      endpoint: req.originalUrl,
+      adminId: req.user?.id || null,
+      statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      message: "payment reject DB error",
       stackTrace: err.stack,
       details: err.message,
       responseTime: Date.now() - startTime,

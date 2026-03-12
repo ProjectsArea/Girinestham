@@ -100,3 +100,29 @@ export const searchStudentsForPayment = async (query) => {
     );
   }
 };
+
+export const rejectPayment = async (paymentId) => {
+  try {
+    const response = await api.get(
+      `${PAYMENTS_API_PREFIX}/${paymentId}/reject`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to reject payment",
+    );
+  }
+};
+
+export const approvePayment = async (paymentId) => {
+  try {
+    const response = await api.get(
+      `${PAYMENTS_API_PREFIX}/${paymentId}/approve`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to approve payment",
+    );
+  }
+};

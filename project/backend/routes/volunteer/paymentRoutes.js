@@ -7,6 +7,8 @@ import {
   getPayment,
   collectOfflinePayment,
   collectOnlinePayment,
+  approvePaymentHandler,
+  rejectPaymentHandler,
 } from "../../controllers/volunteer/paymentController.js";
 
 const router = express.Router();
@@ -16,6 +18,8 @@ router.get("/sub-types", getPaymentSubTypesByMode);
 router.get("/dashboard", getPaymentsDashboard);
 router.get("/", listPayments);
 router.get("/:id", getPayment);
+router.get("/:id/approve", approvePaymentHandler);
+router.get("/:id/reject", rejectPaymentHandler);
 
 router.post("/collect/offline", collectOfflinePayment);
 router.post("/collect/online", collectOnlinePayment);

@@ -1,3 +1,6 @@
+import { useState } from "react";
+import Dialog from "./Dialog";
+
 const COLUMNS = [
   { prop: "receipt_no", Label: "Receipt No", sortable: true },
   { prop: "student_name", Label: "Student Name", sortable: true },
@@ -23,6 +26,19 @@ const StudentPaymentsListTable = ({
   onReject,
   onViewReceipt,
 }) => {
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const handleView = (payment) => {
+    setSelectedPayment(payment);
+    setOpenDialog(true);
+  };
+
+  const closeDialog = () => {
+    setOpenDialog(false);
+    setSelectedPayment(null);
+  };
+
   if (loading) {
     return <div>Loading payments data...</div>;
   }
@@ -76,14 +92,12 @@ const StudentPaymentsListTable = ({
               <td>{payment.payment_decision}</td>
               <td>{payment.payment_date}</td>
               <td>
-                <button onClick={() => onViewReceipt(payment.id)}>View</button>
+                <button onClick={() => handleView(payment)}>View</button>
                 {payment.payment_status === "pending" && (
                   <>
                     <button
                       onClick={() => onApprove(payment.id)}
-                      disabled={
-                        !payment.proof && payment.payment_mode === "offline"
-                      }
+                      disabled={payment.payment_mode === "online"}
                     >
                       Approve
                     </button>
@@ -107,6 +121,33 @@ const StudentPaymentsListTable = ({
           Next
         </button>
       </div>
+
+      <Dialog
+        open={openDialog}
+        title="Payment Details"
+        onClose={() => setOpenDialog(false)}
+      >
+        {/* TODO: show receipt details instead of duplicate table data */}
+        {selectedPayment && (
+          <div>
+            <p>
+              <b>Receipt No:</b> {selectedPayment.receipt_no}
+            </p>
+            <p>
+              <b>Student:</b> {selectedPayment.student_name}
+            </p>
+            <p>
+              <b>Purpose:</b> {selectedPayment.purpose_name}
+            </p>
+            <p>
+              <b>Amount:</b> {selectedPayment.amount}
+            </p>
+            <p>
+              <b>Status:</b> {selectedPayment.payment_status}
+            </p>
+          </div>
+        )}
+      </Dialog>
     </div>
   );
 };

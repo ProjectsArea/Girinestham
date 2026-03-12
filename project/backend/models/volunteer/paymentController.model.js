@@ -434,3 +434,17 @@ export const generateReceiptNumber = async (dateString) => {
   const compactDate = dateString.replaceAll("-", "");
   return `RCP-${compactDate}-${String(count).padStart(4, "0")}`;
 };
+
+export const approvePayment = async (paymentId) => {
+  await executeQuery(
+    "UPDATE tbl_payments SET payment_status_id = ? WHERE id = ?",
+    [1, paymentId],
+  );
+};
+
+export const rejectPayment = async (paymentId) => {
+  await executeQuery(
+    "UPDATE tbl_payments SET payment_status_id = ? WHERE id = ?",
+    [3, paymentId],
+  );
+};

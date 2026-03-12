@@ -7,6 +7,8 @@ import {
   getPaymentsDashboard,
   listPayments,
   getPaymentMeta,
+  rejectPayment,
+  approvePayment,
 } from "../api/studentPaymentsApi";
 
 const StudentPaymentsDashboard = () => {
@@ -103,14 +105,22 @@ const StudentPaymentsDashboard = () => {
     alert(`View receipt for: ${paymentId}`);
   };
 
-  const handleApprove = (paymentId) => {
-    //TODO: approve payment
-    console.log("Approve payment", paymentId);
+  const handleApprove = async (paymentId) => {
+    try {
+      await approvePayment(paymentId);
+      fetchDashboardData();
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
-  const handleReject = (paymentId) => {
-    //TODO: reject payment
-    console.log("Reject payment", paymentId);
+  const handleReject = async (paymentId) => {
+    try {
+      await rejectPayment(paymentId);
+      fetchDashboardData();
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   return (
