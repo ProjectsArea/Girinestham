@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 /* Public Pages */
@@ -15,6 +14,7 @@ import AdminDashboard from "./admin/pages/AdminDashboard";
 
 /* Volunteer */
 import StudentRegistrationDashboard from "./volunteer/pages/StudentRegistrationDashboard";
+import StudentPaymentsDashboard from "./volunteer/pages/StudentPaymentsDashboard";
 
 function App() {
   return (
@@ -28,7 +28,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/donate" element={<Donate />} />
 
-        
+
         {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/user-login" element={<UserLogin />} />
@@ -37,6 +37,7 @@ function App() {
 
         {/* Volunteer Routes */}
         <Route path="/volunteer/student-registration" element={<StudentRegistrationDashboard />} />
+        <Route path="/volunteer/student-payments" element={<StudentPaymentsDashboard />} />
 
       </Routes>
     </Router>

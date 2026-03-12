@@ -1,4 +1,5 @@
 import db from "../../config/db.js";
+import { fetchMembershipPlans } from "./studentController.model.js";
 
 const executeQuery = (query, values = []) =>
   new Promise((resolve, reject) => {
@@ -9,23 +10,35 @@ const executeQuery = (query, values = []) =>
   });
 
 export const fetchPaymentMeta = async () => {
-  const [paymentPurposes, paymentModes, paymentStatuses, collectedByTypes] =
-    await Promise.all([
-      executeQuery(
-        "SELECT id, purpose_name, created_at FROM mst_payment_purposes ORDER BY id ASC",
-      ),
-      executeQuery(
-        "SELECT id, mode_name, created_at FROM mst_payment_modes ORDER BY id ASC",
-      ),
-      executeQuery(
-        "SELECT id, status_name, created_at FROM mst_payment_statuses ORDER BY id ASC",
-      ),
-      executeQuery(
-        "SELECT id, type_name, created_at FROM mst_collected_by_types ORDER BY id ASC",
-      ),
-    ]);
+  const [
+    paymentPurposes,
+    paymentModes,
+    paymentStatuses,
+    collectedByTypes,
+    membershipPlans,
+  ] = await Promise.all([
+    executeQuery(
+      "SELECT id, purpose_name, created_at FROM mst_payment_purposes ORDER BY id ASC",
+    ),
+    executeQuery(
+      "SELECT id, mode_name, created_at FROM mst_payment_modes ORDER BY id ASC",
+    ),
+    executeQuery(
+      "SELECT id, status_name, created_at FROM mst_payment_statuses ORDER BY id ASC",
+    ),
+    executeQuery(
+      "SELECT id, type_name, created_at FROM mst_collected_by_types ORDER BY id ASC",
+    ),
+    fetchMembershipPlans(),
+  ]);
 
-  return { paymentPurposes, paymentModes, paymentStatuses, collectedByTypes };
+  return {
+    paymentPurposes,
+    paymentModes,
+    paymentStatuses,
+    collectedByTypes,
+    membershipPlans,
+  };
 };
 
 export const fetchPaymentSubTypes = (paymentModeId) =>
@@ -166,6 +179,8 @@ export const fetchPayments = async ({
   payment_status_id = "",
   date_from = "",
   date_to = "",
+  sort_by = "",
+  order = "",
 } = {}) => {
   const offset = (page - 1) * limit;
   const conditions = [];
@@ -215,6 +230,8 @@ export const fetchPayments = async ({
     LEFT JOIN mst_payment_modes pm ON pm.id = p.payment_mode_id
     LEFT JOIN mst_payment_statuses ps ON ps.id = p.payment_status_id
     LEFT JOIN mst_collected_by_types cbt ON cbt.id = p.collected_by_id
+    LEFT JOIN mst_payment_decisions pd ON pd.id = p.payment_decision_id
+    LEFT JOIN mst_payment_sub_types pst ON pst.id = p.payment_sub_type_id
     ${whereClause}
   `;
 
@@ -223,6 +240,23 @@ export const fetchPayments = async ({
     values,
   );
   const total = Number(countRows[0]?.total || 0);
+
+  const sortColumnsMap = {
+    receipt_no: "p.receipt_no",
+    student_name: "s.full_name",
+    purpose_name: "pp.purpose_name",
+    payment_mode_name: "pm.mode_name",
+    amount: "p.amount",
+    status_name: "ps.status_name",
+    payment_decision: "pd.decision_name",
+    payment_date: "p.payment_date",
+    payment_type: "pst.sub_type_name",
+  };
+
+  const validOrder = order?.toUpperCase() === "ASC" ? "ASC" : "DESC";
+  const orderClause = sortColumnsMap[sort_by]
+    ? `ORDER BY ${sortColumnsMap[sort_by]} ${validOrder}`
+    : "ORDER BY p.id DESC";
 
   const dataRows = await executeQuery(
     `SELECT
@@ -233,12 +267,14 @@ export const fetchPayments = async ({
       pm.mode_name AS payment_mode,
       p.amount,
       ps.status_name AS payment_status,
+      pd.decision_name AS payment_decision,
+      pst.sub_type_name AS payment_type,
       p.payment_date,
       cbt.type_name AS collected_by_type,
       p.transaction_id,
       p.reference_id
     ${baseQuery}
-    ORDER BY p.id DESC
+    ${orderClause}
     LIMIT ? OFFSET ?`,
     [...values, limit, offset],
   );
@@ -264,7 +300,8 @@ export const getPaymentById = async (paymentId) => {
       pm.mode_name AS payment_mode,
       pst.sub_type_name AS payment_sub_type,
       ps.status_name AS payment_status,
-      cbt.type_name AS collected_by_type
+      cbt.type_name AS collected_by_type,
+      pd.decision_name AS payment_decision
     FROM tbl_payments p
     LEFT JOIN tbl_students s ON s.id = p.student_id
     LEFT JOIN mst_payment_purposes pp ON pp.id = p.purpose_id
@@ -272,6 +309,8 @@ export const getPaymentById = async (paymentId) => {
     LEFT JOIN mst_payment_sub_types pst ON pst.id = p.payment_sub_type_id
     LEFT JOIN mst_payment_statuses ps ON ps.id = p.payment_status_id
     LEFT JOIN mst_collected_by_types cbt ON cbt.id = p.collected_by_id
+    LEFT JOIN mst_payment_decisions pd ON pd.id=p.payment_decision_id
+
     WHERE p.id = ?`,
     [paymentId],
   );

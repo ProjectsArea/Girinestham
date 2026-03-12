@@ -226,6 +226,8 @@ export const listPayments = async (req, res) => {
       payment_status_id: req.query.payment_status_id || "",
       date_from: req.query.date_from || "",
       date_to: req.query.date_to || "",
+      sort_by: req.query.sort_by || "",
+      order: req.query.order || "",
     });
 
     const responseTime = Date.now() - startTime;
@@ -474,8 +476,7 @@ export const collectOfflinePayment = async (req, res) => {
     const now = new Date();
     const paymentDate = now.toISOString().slice(0, 10);
     const paymentTime = now.toTimeString().slice(0, 8);
-    const receiptNo =
-      value.receipt_no || (await generateReceiptNumber(paymentDate));
+    const receiptNo = await generateReceiptNumber(paymentDate);
 
     const insertResult = await insertPayment({
       ...buildBasePaymentPayload(value),
@@ -527,6 +528,50 @@ export const collectOfflinePayment = async (req, res) => {
       req,
     });
 
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: ERROR_MESSAGES.DATABASE_ERROR,
+      details: err.message,
+    });
+  }
+};
+
+export const approvePayment = async (req, res) => {
+  const { paymentId } = req.params;
+  const { status } = req.body;
+
+  try {
+    logApplicationEvent({
+      logLevel: "SUCCESS",
+      logType: "payment_approve",
+      method: req.method,
+      endpoint: req.originalUrl,
+      adminId: req.user?.id || null,
+      statusCode: HTTP_STATUS.CREATED,
+      message: "payment approved successfully",
+      details: { payment_id: paymentId },
+      responseTime: Date.now() - startTime,
+      req,
+    });
+    return res.status(HTTP_STATUS.CREATED).json({
+      success: true,
+      message: "payment approved successfully",
+      details: { payment_id: paymentId },
+    });
+  } catch (err) {
+    logApplicationEvent({
+      logLevel: "ERROR",
+      logType: "payment_approve",
+      method: req.method,
+      endpoint: req.originalUrl,
+      adminId: req.user?.id || null,
+      statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      message: "payment approve DB error",
+      stackTrace: err.stack,
+      details: err.message,
+      responseTime: Date.now() - startTime,
+      req,
+    });
     return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: ERROR_MESSAGES.DATABASE_ERROR,
