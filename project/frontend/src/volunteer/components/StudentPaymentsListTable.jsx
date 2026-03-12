@@ -1,5 +1,7 @@
 import { useState } from "react";
 import Dialog from "./Dialog";
+import jsPDF from "jspdf";
+import { Download, Eye } from "lucide-react";
 
 const COLUMNS = [
   { prop: "receipt_no", Label: "Receipt No", sortable: true },
@@ -24,7 +26,6 @@ const StudentPaymentsListTable = ({
   setSortOrder,
   onApprove,
   onReject,
-  onViewReceipt,
 }) => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
@@ -37,6 +38,40 @@ const StudentPaymentsListTable = ({
   const closeDialog = () => {
     setOpenDialog(false);
     setSelectedPayment(null);
+  };
+
+  const buildReceiptPdf = (payment) => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Payment Receipt", 20, 20);
+
+    doc.setFontSize(11);
+    doc.text(`Receipt No: ${payment.receipt_no || "N/A"}`, 20, 40);
+    doc.text(`Student Name: ${payment.student_name || "N/A"}`, 20, 50);
+    doc.text(`Purpose: ${payment.purpose_name || "N/A"}`, 20, 60);
+    doc.text(`Mode: ${payment.payment_type || "N/A"}`, 20, 70);
+    doc.text(`Amount: ${payment.amount || "N/A"}`, 20, 80);
+    doc.text(`Status: ${payment.payment_status || "N/A"}`, 20, 90);
+    doc.text(`Payment Date: ${payment.payment_date || "N/A"}`, 20, 100);
+    doc.setLineWidth(0.5);
+    doc.line(20, 120, 190, 120);
+    doc.setFontSize(10);
+
+    return doc;
+  };
+
+  const handleOpenReceiptPdf = (payment) => {
+    const doc = buildReceiptPdf(payment);
+    const pdfBlobUrl = doc.output("bloburl");
+    window.open(pdfBlobUrl, "_blank");
+  };
+
+  const handleDownloadReceipt = (payment) => {
+    const doc = buildReceiptPdf(payment);
+    doc.save(
+      `receipt_${payment.receipt_no || payment.id}_${payment.student_name}.pdf`,
+    );
   };
 
   if (loading) {
@@ -92,7 +127,12 @@ const StudentPaymentsListTable = ({
               <td>{payment.payment_decision}</td>
               <td>{payment.payment_date}</td>
               <td>
-                <button onClick={() => handleView(payment)}>View</button>
+                <button onClick={() => handleOpenReceiptPdf(payment)}>
+                  <Eye size={16} />
+                </button>
+                {/* INFO: These actions are shown for every users.
+                    TODO: only admins should see these actions.
+                  */}
                 {payment.payment_status === "pending" && (
                   <>
                     <button
@@ -104,6 +144,9 @@ const StudentPaymentsListTable = ({
                     <button onClick={() => onReject(payment.id)}>Reject</button>
                   </>
                 )}
+                <button onClick={() => handleDownloadReceipt(payment)}>
+                  <Download size={16} />
+                </button>
               </td>
             </tr>
           ))}
@@ -127,7 +170,7 @@ const StudentPaymentsListTable = ({
         title="Payment Details"
         onClose={() => setOpenDialog(false)}
       >
-        {/* TODO: show receipt details instead of duplicate table data */}
+        {/* TODO: show complete receipt details */}
         {selectedPayment && (
           <div>
             <p>
