@@ -224,7 +224,9 @@ export const getStudent = async (req, res) => {
   const startTime = Date.now();
   try {
     const { id } = req.params;
-    const student = await findStudentById(parseInt(id));
+    //TODO: should all search by name,contact_number,id
+    // currently searching by id only
+    const student = await findStudentById(id);
 
     const responseTime = Date.now() - startTime;
 

@@ -182,9 +182,15 @@ export const findStudentById = (id) => {
       s.photo,
       s.status,
       sp.sport_name,
-      sp.id as sport_id
+      sp.id as sport_id,
+      sm.mem_status as membership_status,
+      sm.mem_registration_date as membership_registration_date,
+      mt.type_name as membership_tyoe
       FROM tbl_students s
       LEFT JOIN mst_sports sp ON s.sport_interested_id = sp.id
+      LEFT JOIN tbl_student_memberships sm ON s.id = sm.student_id
+      LEFT JOIN tbl_memberships m ON sm.membership_id = m.id
+      LEFT JOIN mst_membership_types mt ON m.membership_type_id = mt.id
       WHERE s.id = ?`;
     db.query(query, [id], (err, results) => {
       if (err) return reject(err);
