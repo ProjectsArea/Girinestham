@@ -8,11 +8,24 @@ export const getAllTournaments = () => {
         t.*,
         s.sport_name,
         l.level_name,
-        st.status_name
+        st.status_name,
+        COALESCE(tr.total_registered, 0) as total_registered,
+        CASE 
+          WHEN t.registration_last_date IS NULL THEN 'N/A'
+          WHEN t.registration_last_date >= CURDATE() THEN 'Open'
+          ELSE 'Closed'
+        END as registration_status
       FROM tbl_tournaments t
       LEFT JOIN mst_sports s ON t.sport_id = s.id
       LEFT JOIN mst_tournament_levels l ON t.tournament_level_id = l.id
       LEFT JOIN mst_tournament_statuses st ON t.tournament_status_id = st.id
+      LEFT JOIN (
+        SELECT 
+          tournament_id,
+          COUNT(*) as total_registered
+        FROM tbl_tournament_registrations
+        GROUP BY tournament_id
+      ) tr ON t.id = tr.tournament_id
       ORDER BY t.created_at DESC
     `;
 
@@ -39,6 +52,34 @@ export const getTournamentById = (id) => {
       }
 
       resolve(results[0] || null);
+    });
+  });
+};
+
+/* ================= GET TOURNAMENT REGISTRATIONS ================= */
+export const getTournamentRegistrations = (tournamentId) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT 
+        tr.*,
+        s.student_name,
+        s.email,
+        s.phone,
+        s.grade,
+        s.section
+      FROM tbl_tournament_registrations tr
+      LEFT JOIN tbl_students s ON tr.student_id = s.id
+      WHERE tr.tournament_id = ?
+      ORDER BY tr.created_at DESC
+    `;
+
+    db.query(query, [tournamentId], (err, results) => {
+      if (err) {
+        console.error("Database error in getTournamentRegistrations:", err);
+        return reject(err);
+      }
+
+      resolve(results);
     });
   });
 };

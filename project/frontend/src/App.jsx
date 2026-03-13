@@ -8,10 +8,13 @@ import Tournaments from "./public/pages/Tournaments";
 import Contact from "./public/pages/Contact";
 import Donate from "./public/pages/Donate";
 
-/* Auth / Admin */
-import Login from "./public/pages/Login";
-import UserLogin from "./public/pages/UserLogin";
+// /* Auth / Login */
+// import Login from "./public/pages/Login";
+// import UserLogin from "./public/pages/UserLogin";
+
+/* Admin Pages */
 import AdminDashboard from "./admin/pages/AdminDashboard";
+import AdminTournamentPage from "./admin/pages/AdminTournamentPage";
 
 function App() {
   return (
@@ -25,11 +28,15 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/donate" element={<Donate />} />
 
-        
-        {/* Auth */}
+        {/* Authentication
         <Route path="/login" element={<Login />} />
-        <Route path="/user-login" element={<UserLogin />} />
+        <Route path="/user-login" element={<UserLogin />} /> */}
+
+        {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+        {/* Tournament Management (Admin) */}
+        <Route path="/admin/tournaments" element={<AdminTournamentPage />} />
 
       </Routes>
     </Router>

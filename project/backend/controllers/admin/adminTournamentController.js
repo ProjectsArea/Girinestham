@@ -2,6 +2,7 @@ import {
   createTournament,
   getAllTournaments,
   getTournamentById,
+  getTournamentRegistrations,
   updateTournament,
   deleteTournament,
 } from "../../models/admin/adminTournamentController.model.js";
