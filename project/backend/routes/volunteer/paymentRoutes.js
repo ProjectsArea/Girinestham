@@ -2,6 +2,7 @@ import express from "express";
 import {
   getPaymentMeta,
   getPaymentSubTypesByMode,
+  getTournamentsForPayment,
   getPaymentsDashboard,
   listPayments,
   getPayment,
@@ -15,6 +16,7 @@ const router = express.Router();
 
 router.get("/meta", getPaymentMeta);
 router.get("/sub-types", getPaymentSubTypesByMode);
+router.get("/tournaments", getTournamentsForPayment);
 router.get("/dashboard", getPaymentsDashboard);
 router.get("/", listPayments);
 router.get("/:id", getPayment);

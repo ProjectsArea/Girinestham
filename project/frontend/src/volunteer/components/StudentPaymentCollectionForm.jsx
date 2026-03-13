@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getPaymentSubTypesByMode,
+  getTournamentsForPayment,
   searchStudentsForPayment,
   collectOfflinePayment,
 } from "../api/studentPaymentsApi";
@@ -11,6 +12,7 @@ const initialForm = {
   student_name: "",
   purpose_id: "",
   membership_plan_id: "",
+  tournament_id: "",
   payment_mode_id: "",
   payment_sub_type_id: "",
   amount: "",
@@ -34,6 +36,8 @@ const StudentPaymentCollectionForm = ({
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   const [subTypes, setSubTypes] = useState([]);
+  const [tournaments, setTournaments] = useState([]);
+  const [isLoadingTournaments, setIsLoadingTournaments] = useState(false);
   const [proofFile, setProofFile] = useState(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,10 +48,33 @@ const StudentPaymentCollectionForm = ({
   );
   const isMembershipPurpose =
     selectedPurpose?.purpose_name?.toLowerCase() === "membership";
+  const isTournamentPurpose =
+    selectedPurpose?.purpose_name?.toLowerCase() === "tournament registration";
 
-  const selectedMembershipPlan = membershipPlans?.find(
-    (plan) => plan.id.toString() === formData.membership_plan_id,
+  const selectedTournament = tournaments?.find(
+    (tournament) => tournament.id.toString() === formData.tournament_id,
   );
+
+  useEffect(() => {
+    if (!isTournamentPurpose || tournaments.length > 0) {
+      return;
+    }
+
+    const loadTournaments = async () => {
+      setIsLoadingTournaments(true);
+
+      try {
+        const result = await getTournamentsForPayment();
+        setTournaments(result.tournaments || []);
+      } catch (err) {
+        setError("Failed to fetch tournaments");
+      } finally {
+        setIsLoadingTournaments(false);
+      }
+    };
+
+    loadTournaments();
+  }, [isTournamentPurpose, tournaments.length]);
 
   const handleSearchStudent = async () => {
     if (!searchQuery.trim()) return;
@@ -103,11 +130,14 @@ const StudentPaymentCollectionForm = ({
       const purpose = purposes?.find((p) => p.id.toString() === value);
       const isMembership =
         purpose?.purpose_name?.toLowerCase() === "membership";
+      const isTournament =
+        purpose?.purpose_name?.toLowerCase() === "tournament registration";
 
       setFormData((prev) => ({
         ...prev,
         purpose_id: value,
         membership_plan_id: isMembership ? prev.membership_plan_id : "",
+        tournament_id: isTournament ? prev.tournament_id : "",
         amount_collected: isMembership ? prev.amount_collected : "",
       }));
       return;
@@ -122,6 +152,19 @@ const StudentPaymentCollectionForm = ({
         ...prev,
         membership_plan_id: value,
         amount_collected: selectedPlan ? selectedPlan.price : "",
+      }));
+      return;
+    }
+
+    if (name === "tournament_id") {
+      const tournament = tournaments?.find(
+        (item) => item.id.toString() === value,
+      );
+
+      setFormData((prev) => ({
+        ...prev,
+        tournament_id: value,
+        amount_collected: tournament ? tournament.participation_fee : "",
       }));
       return;
     }
@@ -178,7 +221,9 @@ const StudentPaymentCollectionForm = ({
           {
             ...payload,
             collected_by_id: 3,
-            reference_id: payload.membership_plan_id,
+            reference_id: isTournamentPurpose
+              ? payload.tournament_id
+              : payload.membership_plan_id,
           },
           csrfToken,
         );
@@ -290,6 +335,35 @@ const StudentPaymentCollectionForm = ({
             </div>
           )}
 
+          {isTournamentPurpose && (
+            <div>
+              <label>Tournament: </label>
+              <select
+                name="tournament_id"
+                value={formData.tournament_id}
+                onChange={handleChange}
+                required={isTournamentPurpose}
+                disabled={isLoadingTournaments}
+              >
+                <option value="">
+                  {isLoadingTournaments
+                    ? "Loading tournaments..."
+                    : "Select Tournament"}
+                </option>
+                {tournaments?.map((tournament) => (
+                  <option key={tournament.id} value={tournament.id}>
+                    {tournament.tournament_name}
+                  </option>
+                ))}
+              </select>
+              {selectedTournament && (
+                <div>
+                  <small>Fee: {selectedTournament.participation_fee}</small>
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
             <label>Amount Collected: </label>
             <input
@@ -298,7 +372,7 @@ const StudentPaymentCollectionForm = ({
               value={formData.amount_collected}
               onChange={handleChange}
               required
-              readOnly={isMembershipPurpose}
+              readOnly={isMembershipPurpose || isTournamentPurpose}
             />
           </div>
         </fieldset>

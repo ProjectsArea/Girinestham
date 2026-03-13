@@ -481,6 +481,51 @@ export const insertStudentMembership = async (data) => {
   );
 };
 
+export const hasTournamentRegistration = async ({ studentId, tournamentId }) => {
+  const rows = await executeQuery(
+    `SELECT id
+     FROM tbl_tournament_registrations
+     WHERE student_id = ? AND tournament_id = ?
+     LIMIT 1`,
+    [studentId, tournamentId],
+  );
+
+  return rows[0] || null;
+};
+
+export const insertTournamentRegistration = async (data) => {
+  const rows = await executeQuery(
+    `INSERT INTO tbl_tournament_registrations (
+      student_id,
+      tournament_id,
+      tour_registration_date,
+      fee_type_id,
+      fee_paid,
+      fee_status_id,
+      payment_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      data.student_id,
+      data.tournament_id,
+      data.registration_date,
+      data.fee_type_id,
+      data.fee_paid,
+      data.fee_status_id,
+      data.payment_id,
+    ],
+  );
+
+  await executeQuery(
+    `UPDATE tbl_tournaments
+     SET total_registered = COALESCE(total_registered, 0) + 1,
+         total_collected_fee = COALESCE(total_collected_fee, 0) + ?
+     WHERE id = ?`,
+    [data.fee_paid, data.tournament_id],
+  );
+
+  return rows;
+};
+
 //**** Tournaments ******
 
 export const fetchTournaments = async () => {

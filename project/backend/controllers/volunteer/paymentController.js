@@ -2,9 +2,8 @@ import {
   fetchPaymentMeta,
   fetchPaymentSubTypes,
   fetchPaymentsDashboard,
+  fetchTournaments,
   getPaymentById,
-  updateTournamentPayment,
-  updateMembershipPayment,
   insertPayment,
   generateReceiptNumber,
   getPaymentStatusMap,
@@ -14,8 +13,11 @@ import {
   rejectPayment,
   approvePayment,
   getMembershipById,
+  getTournamentById,
   incrementMembershipAmountPaid,
   insertStudentMembership,
+  hasTournamentRegistration,
+  insertTournamentRegistration,
 } from "../../models/volunteer/paymentController.model.js";
 import { logApplicationEvent } from "../../utils/logger.js";
 import validator from "validator";
@@ -23,12 +25,14 @@ import validator from "validator";
 import {
   HTTP_STATUS,
   ERROR_MESSAGES,
-  SUCCESS_MESSAGES,
   DATABASE_CONSTANTS,
 } from "../../constants/index.js";
 
 const INVALID_INPUT_MESSAGE = ERROR_MESSAGES.INVALID_INPUT;
 const PAYMENT_SUCCESS_MESSAGE = "Payment recorded successfully";
+
+const normalizePurposeName = (purposeName = "") =>
+  String(purposeName).trim().toLowerCase();
 
 const validateCollectPaymentInput = (body) => {
   const errors = {};
@@ -172,6 +176,53 @@ export const getPaymentSubTypesByMode = async (req, res) => {
   }
 };
 
+export const getTournamentsForPayment = async (req, res) => {
+  const startTime = Date.now();
+
+  try {
+    const tournaments = await fetchTournaments();
+    const responseTime = Date.now() - startTime;
+
+    logApplicationEvent({
+      logLevel: "SUCCESS",
+      logType: "payment_tournaments",
+      method: req.method,
+      endpoint: req.originalUrl,
+      adminId: req.user?.id || null,
+      statusCode: HTTP_STATUS.OK,
+      message: "Tournament payment options fetched successfully",
+      responseTime,
+      req,
+    });
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      tournaments,
+    });
+  } catch (err) {
+    const responseTime = Date.now() - startTime;
+    logApplicationEvent({
+      logLevel: "ERROR",
+      logType: "payment_tournaments",
+      method: req.method,
+      endpoint: req.originalUrl,
+      adminId: req.user?.id || null,
+      statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      message: "Tournament payment options DB error",
+      stackTrace: err.stack,
+      details: err.message,
+      responseTime,
+      req,
+    });
+
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: ERROR_MESSAGES.DATABASE_ERROR,
+      details: err.message,
+    });
+  }
+};
+
 export const getPaymentsDashboard = async (req, res) => {
   const startTime = Date.now();
 
@@ -220,7 +271,7 @@ export const listPayments = async (req, res) => {
   const startTime = Date.now();
 
   try {
-    const result = await fetchPayments({
+    const filters = {
       page: req.query.page ? Number.parseInt(req.query.page, 10) : 1,
       limit: req.query.limit ? Number.parseInt(req.query.limit, 10) : 30,
       student_name: req.query.student_name || "",
@@ -231,9 +282,17 @@ export const listPayments = async (req, res) => {
       payment_status_id: req.query.payment_status_id || "",
       date_from: req.query.date_from || "",
       date_to: req.query.date_to || "",
-      sort_by: req.query.sort_by || "",
-      order: req.query.order || "",
-    });
+    };
+
+    if (req.query.sort_by) {
+      filters.sort_by = req.query.sort_by;
+    }
+
+    if (req.query.order) {
+      filters.order = req.query.order;
+    }
+
+    const result = await fetchPayments(filters);
 
     const responseTime = Date.now() - startTime;
     logApplicationEvent({
@@ -484,7 +543,8 @@ export const collectOfflinePayment = async (req, res) => {
     const now = new Date();
     const paymentDate = now.toISOString().slice(0, 10);
     const paymentTime = now.toTimeString().slice(0, 8);
-    const receiptNo = await generateReceiptNumber(paymentDate);
+    const receiptNo =
+      value.receipt_no || (await generateReceiptNumber(paymentDate));
 
     const insertResult = await insertPayment({
       ...buildBasePaymentPayload(value),
@@ -550,24 +610,74 @@ export const approvePaymentHandler = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const existingPayment = await getPaymentById(id);
+
+    if (!existingPayment) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: "Payment not found",
+      });
+    }
+
     await approvePayment(id);
     const payment = await getPaymentById(id);
+    const purposeName = normalizePurposeName(payment?.purpose_name);
 
-    //INFO: currently it only handlers membership payments.
-    //TODO: handle tournamnets and other payment purposes.
-    //TODO: handle multiple memberships for a single student.
-    const membership = await getMembershipById(payment.reference_id);
-    await incrementMembershipAmountPaid(payment.amount, membership.id);
-    const studentMembership = await insertStudentMembership({
-      student_id: payment.student_id,
-      membership_id: membership.id,
-      registration_date: new Date(),
-      fee_paid: payment.amount,
-      fee_type_id: null, //TODO: should be set based on the payment type.
-      fee_status_id: payment.payment_status_id,
-      payment_id: id,
-    });
-    //
+    if (purposeName === "membership" && payment.reference_id) {
+      const membership = await getMembershipById(payment.reference_id);
+
+      if (!membership) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          message: "Membership not found for this payment",
+        });
+      }
+
+      await incrementMembershipAmountPaid(payment.amount, membership.id);
+      //TODO: should check for existing registration before inserting.
+      await insertStudentMembership({
+        student_id: payment.student_id,
+        membership_id: membership.id,
+        registration_date: new Date(),
+        fee_paid: payment.amount,
+        fee_type_id: null,
+        fee_status_id: payment.payment_status_id,
+        payment_id: id,
+      });
+    }
+
+    if (
+      (purposeName === "tournament" ||
+        purposeName === "tournament registration") &&
+      payment.reference_id
+    ) {
+      const tournament = await getTournamentById(payment.reference_id);
+
+      if (!tournament) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          message: "Tournament not found for this payment",
+        });
+      }
+
+      const existingRegistration = await hasTournamentRegistration({
+        studentId: payment.student_id,
+        tournamentId: tournament.id,
+      });
+
+      if (!existingRegistration) {
+        await insertTournamentRegistration({
+          student_id: payment.student_id,
+          tournament_id: tournament.id,
+          registration_date: new Date(),
+          fee_paid: payment.amount,
+          fee_type_id: null,
+          fee_status_id: payment.payment_status_id,
+          payment_id: id,
+        });
+      }
+      //TODO: should reject if existing registration is found
+    }
 
     logApplicationEvent({
       logLevel: "SUCCESS",

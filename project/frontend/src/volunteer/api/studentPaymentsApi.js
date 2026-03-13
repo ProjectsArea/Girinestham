@@ -40,6 +40,18 @@ export const getPaymentSubTypesByMode = async (modeId) => {
   }
 };
 
+export const getTournamentsForPayment = async () => {
+  try {
+    const response = await api.get(`${PAYMENTS_API_PREFIX}/tournaments`);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch tournaments",
+    );
+  }
+};
+
 export const getPaymentsDashboard = async () => {
   try {
     const response = await api.get(`${PAYMENTS_API_PREFIX}/dashboard`);

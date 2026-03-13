@@ -1,16 +1,19 @@
 import {
   getPaymentMeta,
   getPaymentSubTypesByMode,
+  getTournamentsForPayment,
   getPaymentsDashboard,
   listPayments,
   getPayment,
   collectOnlinePayment,
   collectOfflinePayment,
+  approvePaymentHandler,
 } from "../../controllers/volunteer/paymentController.js";
 
 import {
   fetchPaymentMeta,
   fetchPaymentSubTypes,
+  fetchTournaments,
   fetchPaymentsDashboard,
   getPaymentById,
   insertPayment,
@@ -19,6 +22,13 @@ import {
   getPaymentDecisionMap,
   isTransactionIdDuplicate,
   fetchPayments,
+  approvePayment,
+  getMembershipById,
+  incrementMembershipAmountPaid,
+  insertStudentMembership,
+  getTournamentById,
+  hasTournamentRegistration,
+  insertTournamentRegistration,
 } from "../../models/volunteer/paymentController.model.js";
 
 import { ERROR_MESSAGES } from "../../constants/index.js";
@@ -122,6 +132,33 @@ describe("Volunteer Payment Controller", () => {
     const res = mockResponse();
 
     await getPaymentSubTypesByMode(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+  });
+
+  test("getTournamentsForPayment - success returns 200", async () => {
+    fetchTournaments.mockResolvedValue([
+      { id: 14, tournament_name: "Summer Cup" },
+    ]);
+    const req = buildReq();
+    const res = mockResponse();
+
+    await getTournamentsForPayment(req, res);
+
+    expect(fetchTournaments).toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      tournaments: [{ id: 14, tournament_name: "Summer Cup" }],
+    });
+  });
+
+  test("getTournamentsForPayment - error returns 500", async () => {
+    fetchTournaments.mockRejectedValue(new Error("DB error"));
+    const req = buildReq();
+    const res = mockResponse();
+
+    await getTournamentsForPayment(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
   });
@@ -411,5 +448,101 @@ describe("Volunteer Payment Controller", () => {
     await collectOfflinePayment(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
+  });
+
+  test("approvePaymentHandler - membership payment creates student membership", async () => {
+    approvePayment.mockResolvedValue();
+    getPaymentById.mockResolvedValue({
+      id: 17,
+      student_id: 1,
+      amount: 1200,
+      reference_id: 7,
+      payment_status_id: 1,
+      purpose_name: "Membership",
+    });
+    getMembershipById.mockResolvedValue({ id: 7, membership_name: "Annual" });
+    incrementMembershipAmountPaid.mockResolvedValue();
+    insertStudentMembership.mockResolvedValue({ insertId: 51 });
+
+    const req = buildReq({ params: { id: "17" } });
+    const res = mockResponse();
+
+    await approvePaymentHandler(req, res);
+
+    expect(approvePayment).toHaveBeenCalledWith("17");
+    expect(getMembershipById).toHaveBeenCalledWith(7);
+    expect(incrementMembershipAmountPaid).toHaveBeenCalledWith(1200, 7);
+    expect(insertStudentMembership).toHaveBeenCalledWith(
+      expect.objectContaining({
+        student_id: 1,
+        membership_id: 7,
+        fee_paid: 1200,
+        payment_id: "17",
+      }),
+    );
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  test("approvePaymentHandler - tournament payment creates tournament registration", async () => {
+    approvePayment.mockResolvedValue();
+    getPaymentById.mockResolvedValue({
+      id: 18,
+      student_id: 3,
+      amount: 1500,
+      reference_id: 11,
+      payment_status_id: 1,
+      purpose_name: "Tournament Registration",
+    });
+    getTournamentById.mockResolvedValue({
+      id: 11,
+      tournament_name: "District Cup",
+    });
+    hasTournamentRegistration.mockResolvedValue(null);
+    insertTournamentRegistration.mockResolvedValue({ insertId: 61 });
+
+    const req = buildReq({ params: { id: "18" } });
+    const res = mockResponse();
+
+    await approvePaymentHandler(req, res);
+
+    expect(getTournamentById).toHaveBeenCalledWith(11);
+    expect(hasTournamentRegistration).toHaveBeenCalledWith({
+      studentId: 3,
+      tournamentId: 11,
+    });
+    expect(insertTournamentRegistration).toHaveBeenCalledWith(
+      expect.objectContaining({
+        student_id: 3,
+        tournament_id: 11,
+        fee_paid: 1500,
+        payment_id: "18",
+      }),
+    );
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  test("approvePaymentHandler - duplicate tournament registration skips insert", async () => {
+    approvePayment.mockResolvedValue();
+    getPaymentById.mockResolvedValue({
+      id: 19,
+      student_id: 4,
+      amount: 1500,
+      reference_id: 12,
+      payment_status_id: 1,
+      purpose_name: "Tournament",
+    });
+    getTournamentById.mockResolvedValue({
+      id: 12,
+      tournament_name: "State Cup",
+    });
+    hasTournamentRegistration.mockResolvedValue({ id: 99 });
+
+    const req = buildReq({ params: { id: "19" } });
+    const res = mockResponse();
+
+    await approvePaymentHandler(req, res);
+
+    expect(insertTournamentRegistration).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(201);
   });
 });
