@@ -2,6 +2,7 @@ import { useState } from "react";
 import Dialog from "./Dialog";
 import jsPDF from "jspdf";
 import { Download, Eye } from "lucide-react";
+import { format } from "date-fns";
 
 const COLUMNS = [
   { prop: "receipt_no", Label: "Receipt No", sortable: true },
@@ -10,7 +11,7 @@ const COLUMNS = [
   { prop: "payment_type", Label: "Payment Mode", sortable: true },
   { prop: "amount", Label: "Amount", sortable: true },
   { prop: "status_name", Label: "Status" },
-  { prop: "payment_decision", Label: "Decision" },
+  // { prop: "payment_decision", Label: "Decision" },
   { prop: "payment_date", Label: "Date", sortable: true },
 ];
 
@@ -30,15 +31,15 @@ const StudentPaymentsListTable = ({
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
 
-  const handleView = (payment) => {
-    setSelectedPayment(payment);
-    setOpenDialog(true);
-  };
+  // const handleView = (payment) => {
+  //   setSelectedPayment(payment);
+  //   setOpenDialog(true);
+  // };
 
-  const closeDialog = () => {
-    setOpenDialog(false);
-    setSelectedPayment(null);
-  };
+  // const closeDialog = () => {
+  //   setOpenDialog(false);
+  //   setSelectedPayment(null);
+  // };
 
   const buildReceiptPdf = (payment) => {
     const doc = new jsPDF();
@@ -53,7 +54,11 @@ const StudentPaymentsListTable = ({
     doc.text(`Mode: ${payment.payment_type || "N/A"}`, 20, 70);
     doc.text(`Amount: ${payment.amount || "N/A"}`, 20, 80);
     doc.text(`Status: ${payment.payment_status || "N/A"}`, 20, 90);
-    doc.text(`Payment Date: ${payment.payment_date || "N/A"}`, 20, 100);
+    doc.text(
+      `Payment Date: ${format(payment.payment_date, "PPpp") || "N/A"}`,
+      20,
+      100,
+    );
     doc.setLineWidth(0.5);
     doc.line(20, 120, 190, 120);
     doc.setFontSize(10);
@@ -124,8 +129,8 @@ const StudentPaymentsListTable = ({
               <td>{payment.payment_type}</td>
               <td>{payment.amount}</td>
               <td>{payment.payment_status}</td>
-              <td>{payment.payment_decision}</td>
-              <td>{payment.payment_date}</td>
+              {/* <td>{payment.payment_decision}</td>*/}
+              <td>{format(payment.payment_date, "PPpp")}</td>
               <td>
                 <button onClick={() => handleOpenReceiptPdf(payment)}>
                   <Eye size={16} />

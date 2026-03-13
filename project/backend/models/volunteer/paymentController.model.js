@@ -397,11 +397,12 @@ export const insertPayment = async (data) => {
       proof,
       amount,
       purpose_id,
+      student_id,
       reference_id,
       payment_decision_id,
       remarks,
       decision_date
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       data.receipt_no,
       data.payment_date,
@@ -414,6 +415,7 @@ export const insertPayment = async (data) => {
       data.proof,
       data.amount,
       data.purpose_id,
+      data.student_id,
       data.reference_id,
       data.payment_decision_id,
       data.remarks,
@@ -432,20 +434,20 @@ export const generateReceiptNumber = async (dateString) => {
 
   const count = Number(rows[0]?.total || 0) + 1;
   const compactDate = dateString.replaceAll("-", "");
-  return `RCP-${compactDate}-${String(count).padStart(4, "0")}`;
+  return `RCP-${compactDate}-${String(count).padStart(3, "0")}`;
 };
 
 export const approvePayment = async (paymentId) => {
   await executeQuery(
-    "UPDATE tbl_payments SET payment_status_id = ? WHERE id = ?",
-    [1, paymentId],
+    "UPDATE tbl_payments SET payment_status_id = ?, payment_decision_id = ? WHERE id = ?",
+    [1, 1, paymentId],
   );
 };
 
 export const rejectPayment = async (paymentId) => {
   await executeQuery(
-    "UPDATE tbl_payments SET payment_status_id = ? WHERE id = ?",
-    [3, paymentId],
+    "UPDATE tbl_payments SET payment_status_id = ?, payment_decision_id = ? WHERE id = ?",
+    [3, 3, paymentId],
   );
 };
 
@@ -462,15 +464,120 @@ export const insertStudentMembership = async (data) => {
     INSERT INTO tbl_student_memberships (student_id,
     membership_id,
     mem_registration_date,
+    fee_paid,
+    fee_type_id,
     payment_id
     )
-    VALUES (?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
   `,
     [
       data.student_id,
       data.membership_id,
       data.registration_date,
+      data.fee_paid,
+      data.fee_type_id,
       data.payment_id,
     ],
+  );
+};
+
+//**** Tournaments ******
+
+export const fetchTournaments = async () => {
+  const rows = await executeQuery(
+    `SELECT
+      t.id,
+      t.tournament_name,
+      t.tournament_code,
+      t.participation_fee,
+      t.tournament_date,
+      t.registration_last_date,
+      t.total_registered,
+      t.max_students_allowed,
+      t.registration_status,
+      s.sport_name,
+      tl.level_name,
+      ts.status_name as tournament_status
+    FROM tbl_tournaments t
+    LEFT JOIN mst_sports s ON s.id = t.sport_id
+    LEFT JOIN mst_tournament_levels tl ON tl.id = t.tournament_level_id
+    LEFT JOIN mst_tournament_statuses ts ON ts.id = t.tournament_status_id
+    WHERE t.registration_status = 1
+      AND t.tournament_date >= CURDATE()
+    ORDER BY t.tournament_date ASC`,
+  );
+
+  return rows;
+};
+
+export const fetchTournamentRegistrationsByStudent = async (studentId) => {
+  const rows = await executeQuery(
+    `SELECT
+      tr.id,
+      tr.tournament_id,
+      tr.fee_paid,
+      tr.fee_status_id,
+      tr.tour_registration_date,
+      t.tournament_name,
+      t.participation_fee,
+      t.tournament_date,
+      ps.status_name as fee_status
+    FROM tbl_tournament_registrations tr
+    LEFT JOIN tbl_tournaments t ON t.id = tr.tournament_id
+    LEFT JOIN mst_payment_statuses ps ON ps.id = tr.fee_status_id
+    WHERE tr.student_id = ?
+      AND t.tournament_date >= CURDATE()
+      AND tr.fee_status_id != (SELECT id FROM mst_payment_statuses WHERE LOWER(status_name) = 'paid')
+    ORDER BY t.tournament_date ASC`,
+    [studentId],
+  );
+
+  return rows;
+};
+
+export const getTournamentRegistrationById = async (registrationId) => {
+  const rows = await executeQuery(
+    `SELECT
+      tr.id,
+      tr.student_id,
+      tr.tournament_id,
+      tr.fee_paid,
+      tr.fee_status_id,
+      tr.tour_registration_date,
+      t.tournament_name,
+      t.participation_fee,
+      s.full_name as student_name,
+      s.contact_number
+    FROM tbl_tournament_registrations tr
+    LEFT JOIN tbl_tournaments t ON t.id = tr.tournament_id
+    LEFT JOIN tbl_students s ON s.id = tr.student_id
+    WHERE tr.id = ?`,
+    [registrationId],
+  );
+
+  return rows[0] || null;
+};
+
+export const updateTournamentPaymentStatus = async ({
+  registrationId,
+  amount,
+  paymentStatusId,
+  paymentId,
+}) => {
+  await executeQuery(
+    `UPDATE tbl_tournament_registrations
+     SET fee_paid = COALESCE(fee_paid, 0) + ?,
+         fee_status_id = ?,
+         payment_id = ?
+     WHERE id = ?`,
+    [amount, paymentStatusId, paymentId, registrationId],
+  );
+
+  await executeQuery(
+    `UPDATE tbl_tournaments t
+     INNER JOIN tbl_tournament_registrations tr ON tr.tournament_id = t.id
+     SET t.total_collected_fee = COALESCE(t.total_collected_fee, 0) + ?
+     WHERE tr.id = ?`,
+    [amount, registrationId],
   );
 };

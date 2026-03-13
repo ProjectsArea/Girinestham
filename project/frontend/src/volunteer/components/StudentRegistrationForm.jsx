@@ -51,6 +51,8 @@ export default function StudentRegistrationForm({ sports }) {
         csrfToken = await getCsrfToken();
         localStorage.setItem("csrf-token", csrfToken);
       }
+      //TODO: should show a success message on successful registration
+      // and update the students list
       const result = await createStudent(csrfToken, payload);
     } catch (submitError) {
       const message =

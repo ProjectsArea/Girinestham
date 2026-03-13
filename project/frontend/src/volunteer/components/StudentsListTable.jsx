@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import "../css/StudentsListTable.css";
 import { searchStudents } from "../api/studentsApi";
+import { format } from "date-fns";
+
 const COLUMNS = [
   {
     prop: "id",
@@ -126,9 +128,7 @@ export default function StudentsListTable() {
                   return (
                     <td key={column.prop}>
                       {student[column.prop]
-                        ? Intl.DateTimeFormat("en-IN").format(
-                            new Date(student[column.prop]),
-                          )
+                        ? format(student[column.prop], "PPpp")
                         : null}
                     </td>
                   );

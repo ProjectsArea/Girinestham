@@ -457,6 +457,7 @@ export const collectOnlinePayment = async (req, res) => {
 export const collectOfflinePayment = async (req, res) => {
   const startTime = Date.now();
   const { error, value } = validateCollectPaymentInput(req.body);
+  console.log(error);
 
   if (error) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -476,6 +477,8 @@ export const collectOfflinePayment = async (req, res) => {
 
   try {
     const paymentStatusMap = await getPaymentStatusMap();
+    const paymentDecisionMap = await getPaymentDecisionMap();
+
     const pendingStatusId = paymentStatusMap.pending;
 
     const now = new Date();
@@ -489,7 +492,7 @@ export const collectOfflinePayment = async (req, res) => {
       payment_time: paymentTime,
       proof: value.proof,
       payment_status_id: pendingStatusId,
-      payment_decision_id: null,
+      payment_decision_id: paymentDecisionMap.pending,
       decision_date: null,
       transaction_id: null,
       receipt_no: receiptNo,
@@ -552,12 +555,16 @@ export const approvePaymentHandler = async (req, res) => {
 
     //INFO: currently it only handlers membership payments.
     //TODO: handle tournamnets and other payment purposes.
+    //TODO: handle multiple memberships for a single student.
     const membership = await getMembershipById(payment.reference_id);
     await incrementMembershipAmountPaid(payment.amount, membership.id);
     const studentMembership = await insertStudentMembership({
       student_id: payment.student_id,
       membership_id: membership.id,
       registration_date: new Date(),
+      fee_paid: payment.amount,
+      fee_type_id: null, //TODO: should be set based on the payment type.
+      fee_status_id: payment.payment_status_id,
       payment_id: id,
     });
     //

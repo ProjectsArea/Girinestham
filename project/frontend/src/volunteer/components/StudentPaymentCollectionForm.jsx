@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   getPaymentSubTypesByMode,
   searchStudentsForPayment,
+  collectOfflinePayment,
 } from "../api/studentPaymentsApi";
 import { getCsrfToken } from "../../public/api/authApi";
 
@@ -164,10 +165,23 @@ const StudentPaymentCollectionForm = ({
       if (isOnlineMode) {
         // TODO: collect online payment
       } else {
-        if (proofFile) {
+        //INFO: we are using a random URL
+        // for demo purposes if no file is uploaded.
+        // TODO: should replace with actual proof file upload
+        if (!proofFile && !payload.proof) {
+          payload.proof = `https://picsum.photos/seed/receipt-${Date.now()}/400/300.jpg`;
+        } else if (proofFile) {
           payload.proof = proofFile;
         }
-        // TODO: collect offline payment
+
+        const result = await collectOfflinePayment(
+          {
+            ...payload,
+            collected_by_id: 3,
+            reference_id: payload.membership_plan_id,
+          },
+          csrfToken,
+        );
       }
 
       if (onSuccess) {

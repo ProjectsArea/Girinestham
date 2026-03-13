@@ -12,6 +12,9 @@ import {
 } from "../api/studentPaymentsApi";
 
 const StudentPaymentsDashboard = () => {
+  //TODO: should move all the state into a context
+  // or
+  // use a state management libraries for clean structure.
   const [showCollectForm, setShowCollectForm] = useState(false);
 
   const [stats, setStats] = useState(null);

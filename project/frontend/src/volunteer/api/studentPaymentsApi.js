@@ -126,3 +126,22 @@ export const approvePayment = async (paymentId) => {
     );
   }
 };
+
+export const collectOfflinePayment = async (paymentData, csrfToken) => {
+  try {
+    const response = await api.post(
+      `${PAYMENTS_API_PREFIX}/collect/offline`,
+      paymentData,
+      {
+        headers: {
+          "X-CSRF-TOKEN": csrfToken,
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to collect offline payment",
+    );
+  }
+};
